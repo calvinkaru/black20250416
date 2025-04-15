@@ -1,0 +1,68 @@
+<style>
+    /* styles.css */
+.barcode-container {
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.store-name {
+  font-weight: bold;
+}
+
+.product-price {
+  font-weight: bold;
+}
+
+.barcode img {
+  display: block;
+}
+
+.product-name {
+  font-weight: bold;
+}
+
+</style>
+
+<div class="barcode-container">
+    <% if (barcode_settings.show_barcode_store === "on") { %>
+      <p class="store-name" style="font-size: <%= settings.storeFontSize %>;">
+        <%= shop_name %>
+      </p>
+    <% } %>
+    <% if (barcode_settings.show_barcode_product_price === "on") { %>
+      <p 
+        class="product-price"
+        style="
+          font-size: <%= settings.priceFontSize %>; 
+          margin-top: <%= settings.priceMarginTop %>; 
+          margin-bottom: <%= settings.priceMarginBottom %>;
+        "
+      >
+        RS. <%= product.price %>
+      </p>
+    <% } %>
+    <div 
+      class="barcode" 
+      style="margin-top: <%= settings.barcodeMarginTop %>;"
+    >
+      <svg 
+        alt="Barcode" 
+        id="barcode"
+      > </svg>
+    </div>
+    <% if (barcode_settings.show_barcode_product_name === "on") { %>
+      <p 
+        class="product-name" 
+        style="
+          margin-top: <%= settings.productNameMarginTop %>; 
+          font-size: <%= settings.productNameFontSize %>;
+        "
+      >
+        <%= product.name %>
+      </p>
+    <% } %>
+  </div>
+

@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer components {
+  input {
+    --tw-ring-color: none;
+  }
+}
+
+[type='text']:focus, input:where(:not([type])):focus, [type='email']:focus, [type='url']:focus, [type='password']:focus, [type='number']:focus, [type='date']:focus, [type='datetime-local']:focus, [type='month']:focus, [type='search']:focus, [type='tel']:focus, [type='time']:focus, [type='week']:focus, [multiple]:focus, textarea:focus, select:focus {
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: none;
+}
+
+.swal2-container {
+    z-index: 9999;
+  };
+
+#btn-manage-stock button.MuiButtonBase-root.MuiToggleButtonGroup-grouped.MuiToggleButtonGroup-groupedHorizontal.MuiToggleButton-root.Mui-selected.MuiToggleButton-fullWidth.MuiToggleButton-sizeMedium.MuiToggleButton-primary.p-5.css-uobg7u-MuiButtonBase-root-MuiToggleButton-root {
+  padding: 15px;
+}
+
+#nprogress .bar {
+  z-index: 2000!important;
+  height: 5px!important;
+}
+
+#nprogress .spinner{
+  z-index: 2000!important;
+}
+
+#nprogress .spinner-icon{
+  width: 40px !important;
+  height: 40px!important;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.Select.is-open {
+  z-index: 1000 !important;
+}
+
+.Select-menu-outer {
+  z-index: 999 !important;
+}
