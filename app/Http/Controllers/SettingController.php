@@ -228,7 +228,29 @@ class SettingController extends Controller
     public function update(Request $request)
     {
         $setting_type = $request->setting_type;
-        $settingsData = $request->only(['sale_receipt_note', 'shop_name', 'sale_print_padding_right', 'sale_print_padding_left', 'sale_print_font', 'show_barcode_store', 'show_barcode_product_price', 'show_barcode_product_name', 'show_receipt_shop_name', 'sale_receipt_second_note',]);
+        $settingsData = $request->only([
+            'sale_receipt_note', 
+            'shop_name', 
+            'sale_print_padding_right', 
+            'sale_print_padding_left', 
+            'sale_print_padding_top',
+            'sale_print_padding_bottom',
+            'sale_print_font', 
+            'show_barcode_store', 
+            'show_barcode_product_price', 
+            'show_barcode_product_name', 
+            'show_receipt_shop_name', 
+            'sale_receipt_second_note',
+            'shop_name_font_size',
+            'receipt_header_font_size',
+            'item_name_font_size',
+            'item_details_font_size',
+            'summary_font_size',
+            'footer_font_size',
+            'item_spacing',
+            'section_spacing',
+            'summary_row_spacing'
+        ]);
 
         if ($setting_type == 'shop_information') {
             $request->validate([

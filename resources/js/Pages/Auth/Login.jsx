@@ -96,8 +96,8 @@ export default function Login({ status, canResetPassword, version }) {
             </div>
 
             <div className='flex justify-center'>
-            <img src={simplelogo} alt="" style={{height:'60px', objectFit:'contain'}}/>
-                <img src={simplePosLogo} alt="" style={{height:'60px', objectFit:'contain'}}/>
+                <img src={simplelogo} alt="" style={{paddingLeft:'30px', paddingRight:'10px', height:'60px', objectFit:'contain'}}/>
+                <img src={simplePosLogo} alt="" style={{paddingLeft:'20px', height:'60px', objectFit:'contain'}}/>
             </div>
             
         </GuestLayout>

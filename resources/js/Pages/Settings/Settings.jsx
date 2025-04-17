@@ -101,12 +101,29 @@ export default function Setting({ settings }) {
         shop_name: settings.shop_name,
         sale_print_padding_right: settings.sale_print_padding_right,
         sale_print_padding_left: settings.sale_print_padding_left,
+        sale_print_padding_top: settings.sale_print_padding_top || "0",
+        sale_print_padding_bottom: settings.sale_print_padding_bottom || "0",
         sale_print_font: settings.sale_print_font,
         show_receipt_shop_name: settings.show_receipt_shop_name ?? 1,
         show_barcode_store: settings.show_barcode_store,
         show_barcode_product_price: settings.show_barcode_product_price,
         show_barcode_product_name: settings.show_barcode_product_name,
         sale_receipt_second_note: settings.sale_receipt_second_note,
+        shop_name_font_size: settings.shop_name_font_size || "20px",
+        receipt_header_font_size: settings.receipt_header_font_size || "12px",
+        item_name_font_size: settings.item_name_font_size || "13px",
+        item_details_font_size: settings.item_details_font_size || "12px",
+        summary_font_size: settings.summary_font_size || "12px",
+        footer_font_size: settings.footer_font_size || "11px",
+        item_spacing: settings.item_spacing || "1",
+        section_spacing: settings.section_spacing || "0.2rem",
+        summary_row_spacing: settings.summary_row_spacing || "2",
+        td_padding: settings.td_padding || "0",
+        header_font_weight: settings.header_font_weight || "bold",
+        item_font_weight: settings.item_font_weight || "500",
+        summary_font_weight: settings.summary_font_weight || "bold",
+        spacer_row_padding: settings.spacer_row_padding || "7px 0",
+        balance_due_padding: settings.balance_due_padding || "2",
     });
 
     const [barcodeSettings, setBarcodeSettings] = useState(() => {
@@ -430,6 +447,9 @@ export default function Setting({ settings }) {
                                                     <MenuItem value={0}>Hide</MenuItem>
                                                 </TextField>
                                             </Grid>
+                                            <Typography variant="h6" sx={{ width: '100%', mt: 2, mb: 1 }}>
+                                                Padding Settings
+                                            </Typography>
                                             <Grid size={3}>
                                                 <TextField
                                                     fullWidth
@@ -454,6 +474,42 @@ export default function Setting({ settings }) {
                                                     onChange={handleChange}
                                                 />
                                             </Grid>
+                                            <Grid size={3}>
+                                                <TextField
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    label={"Padding Top"}
+                                                    name="sale_print_padding_top"
+                                                    multiline
+                                                    value={settingFormData.sale_print_padding_top}
+                                                    onChange={handleChange}
+                                                />
+                                            </Grid>
+                                            <Grid size={3}>
+                                                <TextField
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    label={"Padding Bottom"}
+                                                    name="sale_print_padding_bottom"
+                                                    multiline
+                                                    value={settingFormData.sale_print_padding_bottom}
+                                                    onChange={handleChange}
+                                                />
+                                            </Grid>
+                                            <Grid size={3}>
+                                                <TextField
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    label={"Table Cell Padding"}
+                                                    name="td_padding"
+                                                    value={settingFormData.td_padding}
+                                                    onChange={handleChange}
+                                                />
+                                            </Grid>
+                                            
+                                            <Typography variant="h6" sx={{ width: '100%', mt: 3, mb: 1 }}>
+                                                Font Settings
+                                            </Typography>
                                             <Grid size={6}>
                                                 <TextField
                                                     fullWidth
@@ -474,6 +530,158 @@ export default function Setting({ settings }) {
                                                         </MenuItem>
                                                     ))}
                                                 </TextField>
+                                            </Grid>
+                                            
+                                            <Typography variant="h6" sx={{ width: '100%', mt: 3, mb: 1 }}>
+                                                Font Size Settings
+                                            </Typography>
+                                            <Grid size={3}>
+                                                <TextField
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    label={"Shop Name Font Size"}
+                                                    name="shop_name_font_size"
+                                                    value={settingFormData.shop_name_font_size}
+                                                    onChange={handleChange}
+                                                />
+                                            </Grid>
+                                            <Grid size={3}>
+                                                <TextField
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    label={"Header Font Size"}
+                                                    name="receipt_header_font_size"
+                                                    value={settingFormData.receipt_header_font_size}
+                                                    onChange={handleChange}
+                                                />
+                                            </Grid>
+                                            <Grid size={3}>
+                                                <TextField
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    label={"Item Name Font Size"}
+                                                    name="item_name_font_size"
+                                                    value={settingFormData.item_name_font_size}
+                                                    onChange={handleChange}
+                                                />
+                                            </Grid>
+                                            <Grid size={3}>
+                                                <TextField
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    label={"Item Details Font Size"}
+                                                    name="item_details_font_size"
+                                                    value={settingFormData.item_details_font_size}
+                                                    onChange={handleChange}
+                                                />
+                                            </Grid>
+                                            <Grid size={3}>
+                                                <TextField
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    label={"Summary Font Size"}
+                                                    name="summary_font_size"
+                                                    value={settingFormData.summary_font_size}
+                                                    onChange={handleChange}
+                                                />
+                                            </Grid>
+                                            <Grid size={3}>
+                                                <TextField
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    label={"Footer Font Size"}
+                                                    name="footer_font_size"
+                                                    value={settingFormData.footer_font_size}
+                                                    onChange={handleChange}
+                                                />
+                                            </Grid>
+                                            
+                                            <Typography variant="h6" sx={{ width: '100%', mt: 3, mb: 1 }}>
+                                                Font Weight Settings
+                                            </Typography>
+                                            <Grid size={3}>
+                                                <TextField
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    label={"Header Font Weight"}
+                                                    name="header_font_weight"
+                                                    value={settingFormData.header_font_weight}
+                                                    onChange={handleChange}
+                                                />
+                                            </Grid>
+                                            <Grid size={3}>
+                                                <TextField
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    label={"Item Font Weight"}
+                                                    name="item_font_weight"
+                                                    value={settingFormData.item_font_weight}
+                                                    onChange={handleChange}
+                                                />
+                                            </Grid>
+                                            <Grid size={3}>
+                                                <TextField
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    label={"Summary Font Weight"}
+                                                    name="summary_font_weight"
+                                                    value={settingFormData.summary_font_weight}
+                                                    onChange={handleChange}
+                                                />
+                                            </Grid>
+                                            
+                                            <Typography variant="h6" sx={{ width: '100%', mt: 3, mb: 1 }}>
+                                                Spacing Settings
+                                            </Typography>
+                                            <Grid size={3}>
+                                                <TextField
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    label={"Item Spacing"}
+                                                    name="item_spacing"
+                                                    value={settingFormData.item_spacing}
+                                                    onChange={handleChange}
+                                                />
+                                            </Grid>
+                                            <Grid size={3}>
+                                                <TextField
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    label={"Section Spacing"}
+                                                    name="section_spacing"
+                                                    value={settingFormData.section_spacing}
+                                                    onChange={handleChange}
+                                                />
+                                            </Grid>
+                                            <Grid size={3}>
+                                                <TextField
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    label={"Summary Row Spacing"}
+                                                    name="summary_row_spacing"
+                                                    value={settingFormData.summary_row_spacing}
+                                                    onChange={handleChange}
+                                                />
+                                            </Grid>
+                                            <Grid size={3}>
+                                                <TextField
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    label={"Spacer Row Padding"}
+                                                    name="spacer_row_padding"
+                                                    value={settingFormData.spacer_row_padding}
+                                                    onChange={handleChange}
+                                                />
+                                            </Grid>
+                                            <Grid size={3}>
+                                                <TextField
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    label={"Balance Due Padding"}
+                                                    name="balance_due_padding"
+                                                    value={settingFormData.balance_due_padding}
+                                                    onChange={handleChange}
+                                                />
                                             </Grid>
                                         </Grid>
                                     </Paper>

@@ -73,54 +73,86 @@ export default function Receipt({ sale, salesItems, settings, user_name, credit_
 
     const styles = {
         receiptTopText: {
-            fontSize: "12px",
+            fontSize: settings.receipt_header_font_size || "12px",
             fontWeight: "bold",
             fontFamily: settings.sale_print_font,
         },
         receiptSummaryText: {
-            fontSize: "11px",
-            padding: 0,
-            fontWeight: "bold",
+            fontSize: settings.summary_font_size || "11px",
+            padding: settings.td_padding ? parseFloat(settings.td_padding) : 0,
+            fontWeight: settings.summary_font_weight || "bold",
             borderBottom: "none",
             fontFamily: settings.sale_print_font,
         },
         receiptSummaryTyp: {
-            fontSize: "12px",
-            fontWeight: "bold",
+            fontSize: settings.summary_font_size || "12px",
+            fontWeight: settings.summary_font_weight || "bold",
             fontFamily: settings.sale_print_font,
         },
         itemsHeader: {
-            fontSize: "12px",
-            padding: 0,
-            fontWeight: "bold",
+            fontSize: settings.item_name_font_size || "12px",
+            padding: settings.td_padding ? parseFloat(settings.td_padding) : 0,
+            fontWeight: settings.header_font_weight || "bold",
             fontFamily: settings.sale_print_font,
-            py: 1,
+            py: settings.item_spacing ? parseFloat(settings.item_spacing) : 1,
             pt: 0,
         },
         itemsHeaderTyp: {
-            fontSize: "13px",
-            fontWeight: "bold",
+            fontSize: settings.item_name_font_size || "13px",
+            fontWeight: settings.header_font_weight || "bold",
             fontFamily: settings.sale_print_font,
         },
 
         itemsCells: {
-            fontSize: "12px",
-            padding: 0,
-            fontWeight: "500",
-            py: 1,
+            fontSize: settings.item_details_font_size || "12px",
+            padding: settings.td_padding ? parseFloat(settings.td_padding) : 0,
+            fontWeight: settings.item_font_weight || "500",
+            py: settings.item_spacing ? parseFloat(settings.item_spacing) : 1,
             verticalAlign: "middle",
             fontFamily: settings.sale_print_font,
         },
         itemsCellsTyp: {
-            fontSize: "12px",
-            fontWeight: "500",
+            fontSize: settings.item_details_font_size || "12px",
+            fontWeight: settings.item_font_weight || "500",
             fontFamily: settings.sale_print_font,
         },
 
         printArea: {
             paddingRight: parseFloat(settings.sale_print_padding_right),
             paddingLeft: parseFloat(settings.sale_print_padding_left),
+            paddingTop: settings.sale_print_padding_top ? parseFloat(settings.sale_print_padding_top) : 0,
+            paddingBottom: settings.sale_print_padding_bottom ? parseFloat(settings.sale_print_padding_bottom) : 0,
         },
+        
+        shopName: {
+            fontSize: settings.shop_name_font_size || "20px",
+            fontFamily: settings.sale_print_font,
+            fontWeight: "bold",
+        },
+        
+        footerText: {
+            fontSize: settings.footer_font_size || "11px",
+            fontFamily: settings.sale_print_font,
+        },
+        
+        sectionDivider: {
+            borderBottom: "1px dashed",
+            borderColor: "grey.700",
+            my: settings.section_spacing ? parseFloat(settings.section_spacing) : "0.2rem",
+        },
+        
+        summaryRowSpacing: {
+            paddingBottom: settings.summary_row_spacing ? parseFloat(settings.summary_row_spacing) : 2,
+        },
+        
+        spacerRow: {
+            padding: settings.spacer_row_padding || "7px 0",
+            borderBottom: "none",
+        },
+        
+        balanceDuePadding: {
+            paddingBottom: settings.balance_due_padding ? parseFloat(settings.balance_due_padding) : 2,
+        }
     };
 
     if (!sale || Object.keys(sale).length === 0) {
@@ -193,12 +225,7 @@ export default function Receipt({ sale, salesItems, settings, user_name, credit_
                                 {settings.show_receipt_shop_name == 1 && (
                                     <Typography
                                         variant="h5"
-                                        sx={{
-                                            fontSize: "20px",
-                                            fontFamily:
-                                                settings.sale_print_font,
-                                            fontWeight: "bold",
-                                        }}
+                                        sx={styles.shopName}
                                         color="initial"
                                         className="receipt-shop-name"
                                     >
@@ -208,10 +235,7 @@ export default function Receipt({ sale, salesItems, settings, user_name, credit_
 
                                 <Typography
                                     variant="h6"
-                                    sx={{
-                                        fontSize: "13px",
-                                        fontFamily: settings.sale_print_font,
-                                    }}
+                                    sx={styles.receiptTopText}
                                     color="initial"
                                     className="receipt-address"
                                 >
@@ -221,11 +245,7 @@ export default function Receipt({ sale, salesItems, settings, user_name, credit_
                                 </Typography>
                             </Box>
                             <Divider
-                                sx={{
-                                    borderBottom: "1px dashed",
-                                    borderColor: "grey.700",
-                                    my: "0.2rem",
-                                }}
+                                sx={styles.sectionDivider}
                                 className="receipt-divider-after-address"
                             />
                             <Box className="flex items-start flex-col justify-start receipt-meta">
@@ -280,11 +300,7 @@ export default function Receipt({ sale, salesItems, settings, user_name, credit_
                                 </Typography>
                             </Box>
                             <Divider
-                                sx={{
-                                    borderBottom: "1px dashed",
-                                    borderColor: "grey.700",
-                                    my: "0.2rem",
-                                }}
+                                sx={styles.sectionDivider}
                                 className="receipt-divider-after-details"
                             />
 
@@ -463,10 +479,7 @@ export default function Receipt({ sale, salesItems, settings, user_name, credit_
                                         <TableRow>
                                             <TableCell
                                                 colSpan={5}
-                                                sx={{
-                                                    padding: "7px 0",
-                                                    borderBottom: "none",
-                                                }}
+                                                sx={styles.spacerRow}
                                             />
                                         </TableRow>
 
@@ -578,11 +591,7 @@ export default function Receipt({ sale, salesItems, settings, user_name, credit_
                                                 }}
                                             >
                                                 <Divider
-                                                    sx={{
-                                                        borderBottom: "1px dashed",
-                                                        borderColor: "grey.700",
-                                                        my: "0.5rem",
-                                                    }}
+                                                    sx={styles.sectionDivider}
                                                 />
                                             </TableCell>
                                         </TableRow>
@@ -667,7 +676,7 @@ export default function Receipt({ sale, salesItems, settings, user_name, credit_
                                             className="receipt-summary-row"
                                         >
                                             <TableCell
-                                                sx={{...styles.receiptSummaryText, paddingBottom:2}}
+                                                sx={{...styles.receiptSummaryText, ...styles.balanceDuePadding}}
                                                 colSpan={4}
                                                 align="right"
                                             >
@@ -681,7 +690,7 @@ export default function Receipt({ sale, salesItems, settings, user_name, credit_
                                                 </Typography>
                                             </TableCell>
                                             <TableCell
-                                                sx={{...styles.receiptSummaryText, paddingBottom:2}}
+                                                sx={{...styles.receiptSummaryText, ...styles.balanceDuePadding}}
                                                 align="right"
                                             >
                                                 <Typography
@@ -773,24 +782,20 @@ export default function Receipt({ sale, salesItems, settings, user_name, credit_
                             </TableContainer>
 
                             <Divider
-                                sx={{
-                                    borderBottom: "1px dashed",
-                                    borderColor: "grey.700",
-                                    my: "0.2rem",
-                                }}
+                                sx={styles.sectionDivider}
                                 className="receipt-divider-before-footer"
                             />
 
                             <div
                                 className="receipt-footer"
-                                style={styles.receiptSummaryText}
+                                style={styles.footerText}
                                 dangerouslySetInnerHTML={{
                                     __html: settings.sale_receipt_note,
                                 }}
                             />
                             <div
                                 className="receipt-second-note"
-                                style={styles.receiptSummaryText}
+                                style={styles.footerText}
                                 dangerouslySetInnerHTML={{
                                     __html: settings.sale_receipt_second_note,
                                 }}
