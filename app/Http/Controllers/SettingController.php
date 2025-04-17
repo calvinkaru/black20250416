@@ -249,7 +249,13 @@ class SettingController extends Controller
             'footer_font_size',
             'item_spacing',
             'section_spacing',
-            'summary_row_spacing'
+            'summary_row_spacing',
+            'spacer_row_padding',
+            'balance_due_padding',
+            'td_padding',
+            'header_font_weight',
+            'item_font_weight',
+            'summary_font_weight'
         ]);
 
         if ($setting_type == 'shop_information') {
