@@ -148,10 +148,11 @@ export default function Receipt({ sale, salesItems, settings, user_name, credit_
         spacerRow: {
             padding: settings.spacer_row_padding || "7px 0",
             borderBottom: "none",
+            paddingBottom: settings.spacer_row_padding ? settings.spacer_row_padding.split(' ')[0] : "7px",
         },
         
         balanceDuePadding: {
-            paddingBottom: settings.balance_due_padding ? parseFloat(settings.balance_due_padding) : 2,
+            paddingBottom: settings.balance_due_padding ? parseFloat(settings.balance_due_padding) + "px" : "2px",
         }
     };
 
