@@ -8,12 +8,12 @@ import { SharedContext } from '@/Context/SharedContext';
 import { useSales } from '@/Context/SalesContext';
 
 export default function CartItemsTop({ customers }) {
-  const return_sale = usePage().props.return_sale;
+  const { return_sale, orderTypes } = usePage().props;
   const [open, setOpen] = useState(false);
   const [customerList, setCustomerList] = useState(customers)
   const { selectedCustomer, setSelectedCustomer, saleDate, setSaleDate } = useContext(SharedContext);
 
-  const { orderType, setOrderType } = useSales();
+  const { orderType, setOrderType, selectedOrderTypeObj } = useSales();
 
   const handleClose = () => {
     setOpen(false);
@@ -85,11 +85,13 @@ export default function CartItemsTop({ customers }) {
 
       <Grid size={{ xs: 12, sm: 4 }} width={'100%'}>
         <FormControl fullWidth size="small">
-          <InputLabel>Order Type</InputLabel>
+          <InputLabel shrink={true} notched={true}>Order Type</InputLabel>
           <Select value={orderType} onChange={handleOrderTypeChange} label="Order Type">
-            <MenuItem value="dine_in">Dine In</MenuItem>
-            <MenuItem value="delivery">Delivery</MenuItem>
-            <MenuItem value="take_away">Take Away</MenuItem>
+            {orderTypes && orderTypes.map((type) => (
+              <MenuItem key={type.id} value={type.id.toString()}>
+                {type.name}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
       </Grid>

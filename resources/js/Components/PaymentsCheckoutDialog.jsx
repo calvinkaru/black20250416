@@ -34,7 +34,7 @@ export default function PaymentsCheckoutDialog({
     formData,
     is_sale = false,
 }) {
-    const { cartState, cartTotal, emptyCart, totalProfit, dineInCharge } = useCart();
+    const { cartState, cartTotal, emptyCart, totalProfit, dineInCharge, taxes } = useCart();
     const return_sale = usePage().props.return_sale;
     const return_sale_id = usePage().props.sale_id;
 
@@ -100,6 +100,7 @@ export default function PaymentsCheckoutDialog({
         // Add dine-in charge from context if available
         formJson.dine_in_charge = dineInCharge || 0;
         formJson.net_total = cartTotal + dineInCharge - discount;
+        formJson.taxes = taxes; // Include taxes in the form data
 
         let url = '/pos/checkout';
         if (!is_sale) { url = "/purchase/store" }

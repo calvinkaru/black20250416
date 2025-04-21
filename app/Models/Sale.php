@@ -18,6 +18,7 @@ class Sale extends Model
         'reference_id',
         'sale_type',
         'store_id',        // Store ID
+        'order_type_id',   // Order Type ID
         'contact_id',     // Customer ID
         'sale_date',       // Sale date
         'total_amount',    //Net total (total after discount)
@@ -85,6 +86,18 @@ class Sale extends Model
     public function saleItems()
     {
         return $this->hasMany(SaleItem::class, 'sale_id');
+    }
+
+    // Relationship to order type
+    public function orderType()
+    {
+        return $this->belongsTo(OrderType::class);
+    }
+    
+    // Relationship to sales taxes
+    public function salesTaxes()
+    {
+        return $this->hasMany(SalesTax::class);
     }
     
     // Scope to filter sales by store_id

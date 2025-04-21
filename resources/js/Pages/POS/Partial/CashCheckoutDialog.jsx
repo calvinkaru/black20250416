@@ -20,7 +20,7 @@ import { SharedContext } from "@/Context/SharedContext";
 export default function CashCheckoutDialog({ disabled }) {
     const return_sale = usePage().props.return_sale;
     const return_sale_id = usePage().props.sale_id;
-    const { cartState, cartTotal, totalProfit, emptyCart, dineInCharge } = useCart();
+    const { cartState, cartTotal, totalProfit, emptyCart, taxes, totalWithTaxes, orderType } = useCart();
     const { selectedCustomer, saleDate } = useContext(SharedContext);
     const [loading, setLoading] = useState(false);
 
@@ -59,7 +59,8 @@ export default function CashCheckoutDialog({ disabled }) {
         formJson.contact_id = selectedCustomer.id
         formJson.return_sale = return_sale;
         formJson.return_sale_id = return_sale_id;
-        formJson.dine_in_charge = dineInCharge || 0;
+        formJson.order_type_id = orderType;
+        formJson.taxes = taxes; // Include taxes in the form data
 
         axios.post('/pos/checkout', formJson)
             .then((resp) => {
@@ -120,7 +121,7 @@ export default function CashCheckoutDialog({ disabled }) {
                 onClick={handleClickOpen}
                 disabled={disabled}
             >
-                {cartTotal < 0 ? `REFUND Rs.${Math.abs(cartTotal + dineInCharge)}` : `CASH Rs.${cartTotal + dineInCharge}`}
+                {cartTotal < 0 ? `REFUND Rs.${Math.abs(totalWithTaxes)}` : `CASH Rs.${totalWithTaxes.toFixed(2)}`}
             </Button>
             <Dialog
                 fullWidth={true}
@@ -220,7 +221,7 @@ export default function CashCheckoutDialog({ disabled }) {
                             label="Payable Amount"
                             variant="outlined"
                             name="net_total"
-                            value={(cartTotal + dineInCharge - discount).toFixed(2)}
+                            value={(totalWithTaxes - discount).toFixed(2)}
                             sx={{ mt: "2rem", input: { textAlign: "center", fontSize: '2rem' }, }}
                             slotProps={{
                                 input: {
@@ -238,7 +239,7 @@ export default function CashCheckoutDialog({ disabled }) {
                             variant="outlined"
                             name="change_amount"
                             sx={{ mt: "2rem", ml: '1rem', input: { textAlign: "center", fontSize: '2rem' } }}
-                            value={(amountReceived - (cartTotal + dineInCharge - discount)).toFixed(2)}//Change calculation
+                            value={(amountReceived - (totalWithTaxes - discount)).toFixed(2)}//Change calculation
                             slotProps={{
                                 input: {
                                     readOnly: true,
@@ -268,11 +269,11 @@ export default function CashCheckoutDialog({ disabled }) {
                         disabled={
                             !amountReceived ||
                             (cartTotal < 0 && amountReceived === 0) || // Disable if refund and amount received is 0
-                            (cartTotal < 0 && amountReceived != (cartTotal + dineInCharge - discount)) || // Disable if refund and amount received doesn't match cart total minus discount
-                            (cartTotal >= 0 && (amountReceived - (cartTotal + dineInCharge - discount)) < 0) || // Disable if cartTotal is positive and amount is insufficient
+                            (cartTotal < 0 && amountReceived != (totalWithTaxes - discount)) || // Disable if refund and amount received doesn't match cart total minus discount
+                            (cartTotal >= 0 && (amountReceived - (totalWithTaxes - discount)) < 0) || // Disable if cartTotal is positive and amount is insufficient
                             loading // Disable during loading
 
-                        } //amountReceived-(cartTotal+dineInCharge-discount) 
+                        } //amountReceived-(totalWithTaxes-discount) 
                     >
                         {loading ? 'Loading...' : cartTotal < 0 ? 'REFUND' : 'PAY'}
                     </Button>

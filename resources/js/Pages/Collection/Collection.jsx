@@ -17,6 +17,7 @@ const columns = (handleEdit) => [
   { field: 'name', headerName: 'Name', width: 200 },
   { field: 'collection_type', headerName: 'Collection Type', width: 150 },
   { field: 'description', headerName: 'Description', width: 250 },
+  { field: 'display_limit', headerName: 'Display Limit', width: 120 },
   { field: 'created_at', headerName: 'Created At', width: 150 },
   {
     field: 'action',

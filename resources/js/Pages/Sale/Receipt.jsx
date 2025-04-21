@@ -23,7 +23,7 @@ import numeral from "numeral";
 import dayjs from "dayjs";
 import { useReactToPrint } from "react-to-print";
 
-export default function Receipt({ sale, salesItems, settings, user_name, credit_sale = false }) {
+export default function Receipt({ sale, salesItems, settings, user_name, taxes = [], credit_sale = false }) {
     const user = usePage().props.auth.user;
     const contentRef = useRef(null);
     const reactToPrintFn = useReactToPrint({ contentRef });
@@ -274,6 +274,14 @@ export default function Receipt({ sale, salesItems, settings, user_name, credit_
                                             ) + " "}
                                             By: {user_name}
                                         </Typography>
+                                        {sale.order_type_name && (
+                                            <Typography
+                                                sx={styles.receiptTopText}
+                                                color="initial"
+                                            >
+                                                Order Type: {sale.order_type_name}
+                                            </Typography>
+                                        )}
                                     </>
                                 )}
                                 {credit_sale && (
@@ -505,41 +513,86 @@ export default function Receipt({ sale, salesItems, settings, user_name, credit_
                                         )}
 
                                         {/* Simplified receipt format */}
-                                        <TableRow
-                                            sx={{ border: "none" }}
-                                            className="receipt-summary-row"
-                                        >
-                                            <TableCell
-                                                sx={styles.receiptSummaryText}
-                                                colSpan={4}
-                                                align="right"
-                                            >
-                                                <Typography
-                                                    sx={
-                                                        styles.receiptSummaryTyp
-                                                    }
-                                                    color="initial"
+                                        {/* Calculate subtotal (total amount minus taxes and dine-in charge) */}
+                                        {(() => {
+                                            // Calculate total tax amount
+                                            const totalTaxAmount = taxes.reduce((sum, tax) => sum + parseFloat(tax.amount), 0);
+                                            
+                                            // Calculate subtotal (total amount minus taxes and dine-in charge)
+                                            const subtotal = sale.total_amount - totalTaxAmount - (sale.dine_in_charge || 0);
+                                            
+                                            return (
+                                                <TableRow
+                                                    sx={{ border: "none" }}
+                                                    className="receipt-summary-row"
                                                 >
-                                                    Subtotal:
-                                                </Typography>
-                                            </TableCell>
-                                            <TableCell
-                                                sx={styles.receiptSummaryText}
-                                                align="right"
-                                            >
-                                                <Typography
-                                                    sx={
-                                                        styles.receiptSummaryTyp
-                                                    }
-                                                    color="initial"
+                                                    <TableCell
+                                                        sx={styles.receiptSummaryText}
+                                                        colSpan={4}
+                                                        align="right"
+                                                    >
+                                                        <Typography
+                                                            sx={
+                                                                styles.receiptSummaryTyp
+                                                            }
+                                                            color="initial"
+                                                        >
+                                                            Subtotal:
+                                                        </Typography>
+                                                    </TableCell>
+                                                    <TableCell
+                                                        sx={styles.receiptSummaryText}
+                                                        align="right"
+                                                    >
+                                                        <Typography
+                                                            sx={
+                                                                styles.receiptSummaryTyp
+                                                            }
+                                                            color="initial"
+                                                        >
+                                                            Rs.
+                                                            {numeral(subtotal).format("0,0.00")}
+                                                        </Typography>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })()}
+                                        
+                                        {/* Display taxes */}
+                                        {taxes && taxes.length > 0 && taxes.map((tax) => {
+                                            return (
+                                                <TableRow
+                                                    key={`tax-${tax.id}`}
+                                                    sx={{ border: "none" }}
+                                                    className="receipt-summary-row"
                                                 >
-                                                    Rs.
-                                                    {numeral(
-                                                        sale.total_amount - (sale.dine_in_charge || 0)
-                                                    ).format("0,0.00")}
-                                                </Typography>
-                                            </TableCell>
-                                        </TableRow>
+                                                    <TableCell
+                                                        sx={styles.receiptSummaryText}
+                                                        colSpan={4}
+                                                        align="right"
+                                                    >
+                                                        <Typography
+                                                            sx={styles.receiptSummaryTyp}
+                                                            color="initial"
+                                                        >
+                                                            {tax.name} {tax.type === 'percentage' ? `(${tax.rate}%)` : ''}:
+                                                        </Typography>
+                                                    </TableCell>
+                                                    <TableCell
+                                                        sx={styles.receiptSummaryText}
+                                                        align="right"
+                                                    >
+                                                        <Typography
+                                                            sx={styles.receiptSummaryTyp}
+                                                            color="initial"
+                                                        >
+                                                            Rs.
+                                                            {numeral(tax.amount).format("0,0.00")}
+                                                        </Typography>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
                                         
                                         {sale.dine_in_charge > 0 && (
                                             <TableRow

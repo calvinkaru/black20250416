@@ -1,10 +1,11 @@
-import React, { useState, useEffect} from "react";
+import React, { useState, useEffect, useContext } from "react";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import ListItemText from '@mui/material/ListItemText';
 import ListItemButton from '@mui/material/ListItemButton';
 import { useSales as useCart } from "@/Context/SalesContext";
+import { SharedContext } from "@/Context/SharedContext";
 import dayjs from "dayjs";
 
 import {
@@ -18,11 +19,15 @@ export default function HeldItemsModal({
     setModalOpen,
 }) {
     const { setHeldCartToCart, removeHeldItem } = useCart();
+    const { setSelectedCustomer } = useContext(SharedContext);
     const [heldCartKeys, setHeldCartKeys] = useState([]);
 
+    const [heldCarts, setHeldCarts] = useState({});
+    
     const retrieveHeldCartKeys = () => {
-        const heldCarts = JSON.parse(localStorage.getItem('heldCarts')) || {};
-        setHeldCartKeys(Object.keys(heldCarts)); // Update state with keys
+        const carts = JSON.parse(localStorage.getItem('heldCarts')) || {};
+        setHeldCarts(carts);
+        setHeldCartKeys(Object.keys(carts)); // Update state with keys
     };
 
     const handleClose = () => {
@@ -31,9 +36,20 @@ export default function HeldItemsModal({
     };
 
     const handleLoadHeldCart = (key) => {
-        setHeldCartToCart(key)       // Remove it from localStorage
-        retrieveHeldCartKeys();     // Refresh the held cart keys
-        handleClose()
+        // Get the customer info before removing the held cart
+        const customerInfo = heldCarts[key]?.customerInfo;
+        
+        // Restore the cart
+        setHeldCartToCart(key);
+        
+        // Set the customer if available
+        if (customerInfo) {
+            setSelectedCustomer(customerInfo);
+        }
+        
+        // Refresh the held cart keys and close the modal
+        retrieveHeldCartKeys();
+        handleClose();
     };
 
     useEffect(() => {
@@ -73,7 +89,14 @@ export default function HeldItemsModal({
                         key={key}
                             onClick={() => handleLoadHeldCart(key)} // Set the cart when clicked
                         >
-                        <ListItemText primary={dayjs(key).format('MMMM D, YYYY h:mm A')} /> {/* Display the cart key */}
+                        <ListItemText 
+                            primary={dayjs(key).format('MMMM D, YYYY h:mm A')} 
+                            secondary={
+                                heldCarts[key]?.customerInfo?.name 
+                                    ? `Customer: ${heldCarts[key].customerInfo.name}` 
+                                    : 'No customer info'
+                            }
+                        />
                         </ListItemButton>
                     ))}
                     </Grid>

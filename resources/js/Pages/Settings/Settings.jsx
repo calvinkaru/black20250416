@@ -29,6 +29,7 @@ import Template from "./Partials/Template";
 import MailSetting from "./Partials/MailSetting";
 import TelegramSetting from "./Partials/TelegramSetting";
 import LoyaltyPointsSetting from "./Partials/LoyaltyPointsSetting";
+import MyDrawerSetting from "./Partials/MyDrawerSetting";
 
 const VisuallyHiddenInput = styled("input")({
     clip: "rect(0 0 0 0)",
@@ -245,6 +246,9 @@ export default function Setting({ settings }) {
                         <Tab label="MAIL" />
                         <Tab label="TELEGRAM"/>
                         <Tab label="LOYALTY" />
+                        <Tab label="DRAWER" />
+                        <Tab label="ORDER TYPES" onClick={() => window.location.href = '/settings/order-types'} />
+                        <Tab label="TAXES" onClick={() => window.location.href = '/settings/taxes'} />
                     </Tabs>
                 </Box>
 
@@ -826,6 +830,9 @@ export default function Setting({ settings }) {
                 </TabPanel>
                 <TabPanel value={tabValue} index={8}>
                   <LoyaltyPointsSetting handleSubmit={handleSubmit} settingFormData={settingFormData} handleChange={handleChange} setSettingFormData={setSettingFormData} settings={settings}/>
+                </TabPanel>
+                <TabPanel value={tabValue} index={9}>
+                  <MyDrawerSetting />
                 </TabPanel>
             </Box>
         </AuthenticatedLayout>

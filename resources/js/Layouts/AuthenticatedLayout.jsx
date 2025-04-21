@@ -41,6 +41,7 @@ import ExpandMore from "@mui/icons-material/ExpandMore";
 import BadgeIcon from "@mui/icons-material/Badge";
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import PermMediaIcon from '@mui/icons-material/PermMedia';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMoneyCheck, faFileInvoice } from "@fortawesome/free-solid-svg-icons";
 import simplePosLogo from '@/simplepos.png';
@@ -211,6 +212,16 @@ function AuthenticatedLayout({ header, children, ...props }) {
                     open={open}
                     selected={isSelected("/reports/dailycash")}
                 />
+                
+                {permissions.includes("my-drawer") && (
+                    <NavItem
+                        href="/my-drawer"
+                        icon={AccountBalanceIcon}
+                        label="My Drawer"
+                        open={open}
+                        selected={isSelected("/my-drawer")}
+                    />
+                )}
 
                 {permissions.includes("customers") && (
                     <NavItem

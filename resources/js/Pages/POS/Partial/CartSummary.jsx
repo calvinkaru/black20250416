@@ -6,11 +6,7 @@ import numeral from "numeral";
 import { useSales as useCart } from '@/Context/SalesContext';
 
 export default function CartSummary() {
-    const { cartState, cartTotal, totalQuantity, orderType, dineInCharge } = useCart();
-
-    // Calculate the final total with dine-in charge
-    const baseTotal = cartTotal;
-    const finalTotal = baseTotal + dineInCharge;
+    const { cartState, cartTotal, totalQuantity, taxes, totalWithTaxes, selectedOrderTypeObj } = useCart();
 
     return (
         <List sx={{ width: "100%", bgcolor: "background.paper",}}>
@@ -35,40 +31,36 @@ export default function CartSummary() {
             <ListItem
                 secondaryAction={
                     <Typography variant="h5" color="initial" sx={{ fontSize: { sm: '1rem', xs: '1.2rem' } }}>
-                        <strong>Rs.{numeral(baseTotal).format('0,00.00')}</strong>
+                        <strong>Rs.{numeral(cartTotal).format('0,00.00')}</strong>
                     </Typography>
                 }
             >
                 <ListItemText primary="Subtotal" />
             </ListItem>
 
-            {/* Dine-In Charge (if applicable) */}
-            {orderType === "dine_in" && (
+            {/* Taxes */}
+            {taxes && taxes.map((tax) => (
                 <ListItem
+                    key={tax.id}
                     secondaryAction={
                         <Typography variant="h5" color="initial" sx={{ fontSize: { sm: '1rem', xs: '1.2rem' } }}>
-                            <strong>Rs.{numeral(dineInCharge).format('0,00.00')}</strong>
+                            <strong>Rs.{numeral(tax.amount).format('0,00.00')}</strong>
                         </Typography>
                     }
                 >
-                    <ListItemText primary="Service Charge" />
+                    <ListItemText primary={tax.name} />
                 </ListItem>
-            )}
+            ))}
 
             <ListItem
                 secondaryAction={
                     <Typography variant="h5" color="initial" sx={{fontSize:{sm:'1rem', xs:'1.2rem'}}}>
-                        {/* Rs.{(cartTotal-discount).toFixed(2)} */}
-                        <strong>Rs.{numeral(finalTotal).format('0,00.00')}</strong> 
+                        <strong>Rs.{numeral(totalWithTaxes).format('0,00.00')}</strong> 
                     </Typography>
                 }
             >
                 <ListItemText primary="Total" />
             </ListItem>
-
-
-
-            
         </List>
     );
 }

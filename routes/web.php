@@ -29,6 +29,9 @@ use App\Http\Controllers\EmployeeBalanceController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\ChequeController;
 use App\Http\Controllers\QuotationController;
+use App\Http\Controllers\OrderTypeController;
+use App\Http\Controllers\TaxController;
+use App\Http\Controllers\MyDrawerController;
 
 Route::get('/', function () {
     return redirect('login');
@@ -121,6 +124,20 @@ Route::middleware('auth')->group(function () {
     Route::post('/settings/get-template', [SettingController::class, 'getTemplate'])->name('settings.gettemplate');
     Route::post('/settings/save-template', [SettingController::class, 'saveTemplate'])->name('settings.savetemplate');
 
+    // Order Types Routes
+    Route::get('/settings/order-types', [OrderTypeController::class, 'index'])->name('settings.order-types');
+    Route::post('/settings/order-types', [OrderTypeController::class, 'store']);
+    Route::put('/settings/order-types/{orderType}', [OrderTypeController::class, 'update']);
+    Route::delete('/settings/order-types/{orderType}', [OrderTypeController::class, 'destroy']);
+    Route::get('/settings/active-order-types', [OrderTypeController::class, 'getActiveOrderTypes']);
+
+    // Taxes Routes
+    Route::get('/settings/taxes', [TaxController::class, 'index'])->name('settings.taxes');
+    Route::post('/settings/taxes', [TaxController::class, 'store']);
+    Route::put('/settings/taxes/{tax}', [TaxController::class, 'update']);
+    Route::delete('/settings/taxes/{tax}', [TaxController::class, 'destroy']);
+    Route::get('/settings/active-taxes', [TaxController::class, 'getActiveTaxes']);
+
     Route::get('/expenses', [ExpenseController::class, 'index'])->name('expenses.index');
     Route::post('/expense', [ExpenseController::class, 'store'])->name('expenses.store');
     Route::post('/expense/{id}/delete', [ExpenseController::class, 'delete'])->name('expenses.delete');
@@ -153,6 +170,14 @@ Route::middleware('auth')->group(function () {
     Route::get('reports/{id}/customer', [ReportController::class, 'getCustomerReport'])->name('reports.customer');
     Route::get('reports/{id}/vendor', [ReportController::class, 'getVendorReport'])->name('reports.vendor');
     Route::get('reports/summary-report', [ReportController::class, 'getSummaryReport'])->name('reports.summary');
+    
+    // My Drawer Routes
+    Route::get('/my-drawer', [MyDrawerController::class, 'index'])->name('my-drawer.index');
+    Route::post('/my-drawer/cash-log', [MyDrawerController::class, 'storeCashLog'])->name('my-drawer.store-cash-log');
+    
+    // My Drawer Settings API
+    Route::get('/api/settings/my-drawer', [MyDrawerController::class, 'getSettings'])->name('my-drawer.get-settings');
+    Route::post('/api/settings/update', [MyDrawerController::class, 'updateSettings'])->name('settings.update');
 
     Route::get('/reloads', [ReloadController::class, 'index']);
     Route::post('/reloads/{id}/update', [ReloadController::class, 'update']);

@@ -78,7 +78,13 @@ const cartReducer = (state, action) => {
       const heldCarts = JSON.parse(localStorage.getItem('heldCarts')) || {};
       const currentDateTime = dayjs().format('YYYY-MM-DD HH:mm:ss');
       const newKey = currentDateTime; // Unique key for the held cart
-      heldCarts[newKey] = [...state];
+      
+      // Store cart items along with customer info if provided
+      heldCarts[newKey] = {
+        items: [...state],
+        customerInfo: action.payload?.customerInfo || null
+      };
+      
       localStorage.setItem('heldCarts', JSON.stringify(heldCarts));
       return []; // Clear the current cart state
     }
@@ -123,8 +129,8 @@ const useCartBase = (initialStateKey) => {
     });
   };
 
-  const holdCart = () => {
-    dispatch({ type: 'HOLD_CART' });
+  const holdCart = (customerInfo = null) => {
+    dispatch({ type: 'HOLD_CART', payload: { customerInfo } });
   };
 
   const emptyCart = () => {
@@ -135,15 +141,35 @@ const useCartBase = (initialStateKey) => {
   // Set a held cart as the current cart by retrieving the cart items using a key
   const setHeldCartToCart = (key) => {
     const heldCarts = JSON.parse(localStorage.getItem('heldCarts')) || {};
-    const cart = heldCarts[key] || [];
-    if (cart.length > 0) {
-      // Set the current cart to the retrieved cart
-      dispatch({ type: 'SET_HELD_CART_TO_CART', payload: { cart } });
-
+    const heldCart = heldCarts[key];
+    
+    // Check if the held cart exists and has the new structure
+    if (heldCart && heldCart.items) {
+      // Set the current cart to the retrieved cart items
+      dispatch({ type: 'SET_HELD_CART_TO_CART', payload: { cart: heldCart.items } });
+      
+      // Return customer info if available
+      const customerInfo = heldCart.customerInfo;
+      
       // Remove the held cart from localStorage
       delete heldCarts[key];
       localStorage.setItem('heldCarts', JSON.stringify(heldCarts));
+      
+      return customerInfo;
+    } 
+    // Handle legacy format (before we added customer info)
+    else if (Array.isArray(heldCart) && heldCart.length > 0) {
+      // Set the current cart to the retrieved cart
+      dispatch({ type: 'SET_HELD_CART_TO_CART', payload: { cart: heldCart } });
+      
+      // Remove the held cart from localStorage
+      delete heldCarts[key];
+      localStorage.setItem('heldCarts', JSON.stringify(heldCarts));
+      
+      return null;
     }
+    
+    return null;
   };
 
   const removeHeldItem = (key) => {

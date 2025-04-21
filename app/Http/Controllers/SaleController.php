@@ -114,12 +114,32 @@ class SaleController extends Controller
             'invoice_number',
             'stores.sale_prefix',
             'stores.contact_number',
-            'sales.created_at'
+            'sales.created_at',
+            'order_type_id',
+            'order_types.name as order_type_name'
         )
             ->leftJoin('contacts', 'sales.contact_id', '=', 'contacts.id') // Join with contacts table using customer_id
             ->join('stores', 'sales.store_id', '=', 'stores.id')
+            ->leftJoin('order_types', 'sales.order_type_id', '=', 'order_types.id')
             ->where('sales.id', $id)
             ->first();
+            
+        // Get taxes from the sales_taxes table
+        $taxes = [];
+        if ($sale) {
+            $taxes = \App\Models\SalesTax::where('sale_id', $sale->id)
+                ->with('tax')
+                ->get()
+                ->map(function($saleTax) {
+                    return [
+                        'id' => $saleTax->tax_id,
+                        'name' => $saleTax->tax->name,
+                        'type' => $saleTax->tax->type,
+                        'rate' => $saleTax->tax->rate,
+                        'amount' => $saleTax->amount,
+                    ];
+                });
+        }
 
         if (!$sale) {
             abort(404); // This will trigger the 404 error page
@@ -151,6 +171,7 @@ class SaleController extends Controller
             'salesItems' => $salesItems,
             'settings' => $settingArray,
             'user_name' => $user->name,
+            'taxes' => $taxes,
         ]);
     }
 
@@ -342,6 +363,9 @@ class SaleController extends Controller
         try {
             $sale = Sale::findOrFail($id);
 
+            // Delete associated sales taxes
+            \App\Models\SalesTax::where('sale_id', $sale->id)->delete();
+            
             // Delete associated sale items
             foreach ($sale->saleItems as $item) {
 

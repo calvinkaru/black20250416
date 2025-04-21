@@ -94,7 +94,7 @@ export default function CartFooter() {
             denyButtonText: `NO`,
         }).then((result) => {
             if (result.isConfirmed) {
-                holdCart();
+                holdCart(selectedCustomer);
             }
         });
     };

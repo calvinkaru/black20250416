@@ -1,0 +1,420 @@
+import * as React from "react";
+import { useState, useEffect } from "react";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import { Head, router, usePage } from "@inertiajs/react";
+import Grid from "@mui/material/Grid2";
+import { Button, Typography, Paper, Box } from "@mui/material";
+import PrintIcon from "@mui/icons-material/Print";
+import numeral from "numeral";
+import axios from "axios";
+import Swal from "sweetalert2";
+
+import { styled } from "@mui/material/styles";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell, { tableCellClasses } from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+
+import CashLogDialog from "./Partial/CashLogDialog";
+import DenominationsDialog from "./Partial/DenominationsDialog";
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+    [`&.${tableCellClasses.head}`]: {
+        backgroundColor: theme.palette.common.black,
+        color: theme.palette.common.white,
+    },
+    [`&.${tableCellClasses.body}`]: {
+        fontSize: 14,
+    },
+    padding: 10,
+}));
+
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+    "&:nth-of-type(odd)": {
+        backgroundColor: theme.palette.action.hover,
+    },
+    // hide last border
+    "&:last-child td, &:last-child th": {
+        border: 0,
+    },
+}));
+
+export default function MyDrawerIndex({ logs, hasOpeningBalance, hasClosingBalance, hasTempClosing, isCurrentlyOpen, totalCashIn, totalCashOut, currentBalance, showTableBeforeClosing = false }) {
+    const [showTable, setShowTable] = useState(showTableBeforeClosing);
+    const auth = usePage().props.auth.user;
+    const [dataLogs, setDataLogs] = useState(logs);
+    const [cashLogModalOpen, setCashLogModalOpen] = useState(false);
+    const [denominationsModalOpen, setDenominationsModalOpen] = useState(false);
+    const [transactionType, setTransactionType] = useState('');
+    const [showPrintButton, setShowPrintButton] = useState(hasClosingBalance);
+    
+    const refreshLogs = () => {
+        const options = {
+            preserveState: true,
+            preserveScroll: true,
+            only: ["logs", "hasOpeningBalance", "hasClosingBalance", "hasTempClosing", "isCurrentlyOpen", "totalCashIn", "totalCashOut", "currentBalance", "showTableBeforeClosing"],
+            onSuccess: (response) => {
+                setDataLogs(response.props.logs);
+                setShowPrintButton(response.props.hasClosingBalance);
+                setShowTable(response.props.showTableBeforeClosing);
+            },
+        };
+        router.get(route('my-drawer.index'), {}, options);
+    };
+
+    const handleOpenCashLogModal = (type) => {
+        setTransactionType(type);
+        if (type === 'close_cashier') {
+            setDenominationsModalOpen(true);
+        } else {
+            setCashLogModalOpen(true);
+        }
+    };
+    
+    const handlePrint = () => {
+        const printContent = document.getElementById('drawer-transactions-table');
+        const originalContents = document.body.innerHTML;
+        
+        // Create a styled print version
+        const printStyles = `
+            <style>
+                body { font-family: Arial, sans-serif; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #f2f2f2; }
+                .text-right { text-align: right; }
+                .header { text-align: center; margin-bottom: 20px; }
+                .footer { text-align: center; margin-top: 30px; font-size: 12px; }
+                .total-row { font-weight: bold; }
+            </style>
+        `;
+        
+        // Create header with date and time
+        const header = `
+            <div class="header">
+                <h2>My Drawer - Transaction Report</h2>
+                <p>Date: ${new Date().toLocaleDateString()}</p>
+                <p>Time: ${new Date().toLocaleTimeString()}</p>
+            </div>
+        `;
+        
+        // Create footer
+        const footer = `
+            <div class="footer">
+                <p>*** End of Report ***</p>
+            </div>
+        `;
+        
+        // Open print window
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>My Drawer - Transaction Report</title>
+                    ${printStyles}
+                </head>
+                <body>
+                    ${header}
+                    ${printContent.outerHTML}
+                    ${footer}
+                </body>
+            </html>
+        `);
+        
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+    };
+
+    return (
+        <AuthenticatedLayout>
+            <Head title="My Drawer" />
+            
+            <Grid container spacing={2} justifyContent="center" sx={{ mb: 3 }}>
+                <Grid xs={12} md={8}>
+                    <Paper sx={{ p: 3, textAlign: 'center' }}>
+                        <Typography variant="h4" gutterBottom>
+                            My Drawer - Today
+                        </Typography>
+                        
+                        <Grid container spacing={2} justifyContent="center" sx={{ mt: 2 }}>
+                            {!hasOpeningBalance && (
+                                <Grid xs={12}>
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        size="large"
+                                        fullWidth
+                                        onClick={() => handleOpenCashLogModal('open_cashier')}
+                                        sx={{ py: 2, fontSize: '1.2rem' }}
+                                    >
+                                        Open Cashier
+                                    </Button>
+                                </Grid>
+                            )}
+                            
+                            {hasOpeningBalance && !hasClosingBalance && isCurrentlyOpen && (
+                                <>
+                                    <Grid xs={12} sm={4}>
+                                        <Button
+                                            variant="contained"
+                                            color="success"
+                                            size="large"
+                                            fullWidth
+                                            onClick={() => handleOpenCashLogModal('deposit')}
+                                            sx={{ py: 2 }}
+                                        >
+                                            Deposit
+                                        </Button>
+                                    </Grid>
+                                    <Grid xs={12} sm={4}>
+                                        <Button
+                                            variant="contained"
+                                            color="warning"
+                                            size="large"
+                                            fullWidth
+                                            onClick={() => handleOpenCashLogModal('withdrawal')}
+                                            sx={{ py: 2 }}
+                                        >
+                                            Withdrawal
+                                        </Button>
+                                    </Grid>
+                                    <Grid xs={12} sm={3}>
+                                        <Button
+                                            variant="contained"
+                                            color="info"
+                                            size="large"
+                                            fullWidth
+                                            onClick={() => handleOpenCashLogModal('temp_close_cashier')}
+                                            sx={{ py: 2 }}
+                                        >
+                                            Temp Close
+                                        </Button>
+                                    </Grid>
+                                    <Grid xs={12} sm={3}>
+                                        <Button
+                                            variant="contained"
+                                            color="error"
+                                            size="large"
+                                            fullWidth
+                                            onClick={() => handleOpenCashLogModal('close_cashier')}
+                                            sx={{ py: 2 }}
+                                        >
+                                            Close Cashier
+                                        </Button>
+                                    </Grid>
+                                </>
+                            )}
+                            
+                            {hasOpeningBalance && !hasClosingBalance && !isCurrentlyOpen && (
+                                <Grid xs={12}>
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        size="large"
+                                        fullWidth
+                                        onClick={() => handleOpenCashLogModal('open_cashier')}
+                                        sx={{ py: 2, fontSize: '1.2rem' }}
+                                    >
+                                        Reopen Cashier
+                                    </Button>
+                                </Grid>
+                            )}
+                            
+                            {hasClosingBalance && (
+                                <Grid xs={12}>
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        size="large"
+                                        fullWidth
+                                        onClick={() => handleOpenCashLogModal('open_cashier')}
+                                        sx={{ py: 2, fontSize: '1.2rem' }}
+                                        disabled
+                                    >
+                                        Cashier Closed for Today
+                                    </Button>
+                                </Grid>
+                            )}
+                        </Grid>
+                    </Paper>
+                </Grid>
+            </Grid>
+            
+            {(showTable || hasClosingBalance) && (
+                <Grid container justifyContent={'center'}>
+                    <Paper sx={{ width: { xs: '94vw', sm: '100%' }, overflow: 'hidden', maxWidth: '900px' }} >
+                        {showPrintButton && (
+                            <Box sx={{ p: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                                <Button
+                                    variant="outlined"
+                                    color="primary"
+                                    onClick={handlePrint}
+                                    startIcon={<PrintIcon />}
+                                >
+                                    Print Transactions
+                                </Button>
+                            </Box>
+                        )}
+                        <TableContainer>
+                        <Table id="drawer-transactions-table">
+                            <TableHead>
+                                <TableRow>
+                                    <StyledTableCell>#</StyledTableCell>
+                                    <StyledTableCell align="left">
+                                        TIME
+                                    </StyledTableCell>
+                                    <StyledTableCell align="left">
+                                        DESCRIPTION
+                                    </StyledTableCell>
+                                    <StyledTableCell align="right">
+                                        CASH IN
+                                    </StyledTableCell>
+                                    <StyledTableCell align="right">
+                                        CASH OUT
+                                    </StyledTableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {dataLogs.map((row, index) => (
+                                    <StyledTableRow key={index}>
+                                        <StyledTableCell component="th" scope="row">
+                                            {index + 1}
+                                        </StyledTableCell>
+                                        <StyledTableCell align="left" sx={{ whiteSpace: 'nowrap' }}>
+                                            {row.description ? row.description.split(' - ')[1] || '' : ''}
+                                        </StyledTableCell>
+                                        <StyledTableCell align="left">
+                                            {row.description ? row.description.split(' - ')[0] || row.description : ''}
+                                        </StyledTableCell>
+                                        <StyledTableCell align="right">
+                                            {row.amount > 0 ? numeral(row.amount).format('0,0.00') : '-'}
+                                        </StyledTableCell>
+                                        <StyledTableCell align="right">
+                                            {row.amount < 0 ? numeral(Math.abs(row.amount)).format('0,0.00') : '-'}
+                                        </StyledTableCell>
+                                    </StyledTableRow>
+                                ))}
+
+                                {/* Add Total Row */}
+                                <StyledTableRow>
+                                    <StyledTableCell colSpan={3} align="right">
+                                        <strong>Total:</strong>
+                                    </StyledTableCell>
+                                    <StyledTableCell align="right">
+                                        <strong>{numeral(totalCashIn).format('0,0.00')}</strong>
+                                    </StyledTableCell>
+                                    <StyledTableCell align="right">
+                                        <strong>{numeral(totalCashOut).format('0,0.00')}</strong>
+                                    </StyledTableCell>
+                                </StyledTableRow>
+
+                                <StyledTableRow>
+                                    <StyledTableCell colSpan={5} align="right">
+                                    </StyledTableCell>
+                                </StyledTableRow>
+
+                                {/* Row for displaying the total sum */}
+                                <StyledTableRow>
+                                    <StyledTableCell colSpan={4} align="right">
+                                        <Typography variant="h5" color="initial">
+                                            <strong>Balance:</strong>
+                                        </Typography>
+                                    </StyledTableCell>
+                                    <StyledTableCell align="right">
+                                        <Typography variant="h5" color="initial">
+                                            <strong>
+                                                {numeral(currentBalance).format('0,0.00')}
+                                            </strong>
+                                        </Typography>
+                                    </StyledTableCell>
+                                </StyledTableRow>
+                                
+                                {hasClosingBalance && (
+                                    <>
+                                        <StyledTableRow>
+                                            <StyledTableCell colSpan={5} align="right">
+                                            </StyledTableCell>
+                                        </StyledTableRow>
+                                        
+                                        {/* Expected Balance Row */}
+                                        <StyledTableRow>
+                                            <StyledTableCell colSpan={4} align="right">
+                                                <Typography variant="h6" color="initial">
+                                                    <strong>Expected Balance:</strong>
+                                                </Typography>
+                                            </StyledTableCell>
+                                            <StyledTableCell align="right">
+                                                <Typography variant="h6" color="initial">
+                                                    <strong>
+                                                        {numeral(currentBalance).format('0,0.00')}
+                                                    </strong>
+                                                </Typography>
+                                            </StyledTableCell>
+                                        </StyledTableRow>
+                                        
+                                        {/* Difference Row - only shown if there's a difference */}
+                                        {dataLogs.some(log => log.description && log.description.includes('Closing Cashier Balance')) && (
+                                            (() => {
+                                                // Find the closing log
+                                                const closingLog = dataLogs.find(log => 
+                                                    log.description && log.description.includes('Closing Cashier Balance')
+                                                );
+                                                
+                                                // Extract the counted amount
+                                                const countedAmount = closingLog ? Math.abs(closingLog.amount) : 0;
+                                                
+                                                // Calculate difference
+                                                const diff = countedAmount - currentBalance;
+                                                
+                                                return diff !== 0 ? (
+                                                    <StyledTableRow>
+                                                        <StyledTableCell colSpan={4} align="right">
+                                                            <Typography variant="h6" color="initial">
+                                                                <strong>Difference:</strong>
+                                                            </Typography>
+                                                        </StyledTableCell>
+                                                        <StyledTableCell align="right">
+                                                            <Typography 
+                                                                variant="h6" 
+                                                                color={diff > 0 ? 'success.main' : 'error.main'}
+                                                            >
+                                                                <strong>
+                                                                    {numeral(diff).format('0,0.00')}
+                                                                    {' '}
+                                                                    {diff > 0 ? '(Excess)' : '(Shortage)'}
+                                                                </strong>
+                                                            </Typography>
+                                                        </StyledTableCell>
+                                                    </StyledTableRow>
+                                                ) : null;
+                                            })()
+                                        )}
+                                    </>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </Paper>
+            </Grid>
+            )}
+
+            <CashLogDialog
+                open={cashLogModalOpen}
+                setOpen={setCashLogModalOpen}
+                transactionType={transactionType}
+                refreshLogs={refreshLogs}
+            />
+
+            <DenominationsDialog
+                open={denominationsModalOpen}
+                setOpen={setDenominationsModalOpen}
+                refreshLogs={refreshLogs}
+                currentBalance={currentBalance}
+            />
+        </AuthenticatedLayout>
+    );
+}

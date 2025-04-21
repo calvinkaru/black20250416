@@ -56,8 +56,16 @@ class POSController extends Controller
         // Apply category filter if set
         if (isset($filters['category_id'])) {
             $query->where('products.category_id', $filters['category_id']);
+            
+            // Get the display limit for this category
+            $displayLimit = 20; // Default limit
+            $category = \App\Models\Collection::where('id', $filters['category_id'])->first();
+            if ($category && $category->display_limit) {
+                $displayLimit = $category->display_limit;
+            }
         } else {
             $query->where('pb.is_featured', 1);
+            $displayLimit = 20; // Default limit for featured products
         }
 
         $products = $query->groupBy(
@@ -75,7 +83,7 @@ class POSController extends Controller
             'products.meta_data',
             'products.alert_quantity'
         )
-            ->limit(20)
+            ->limit($displayLimit)
             ->get();
 
         return $products;
@@ -107,6 +115,13 @@ class POSController extends Controller
         $miscSettings = Setting::where('meta_key', 'misc_settings')->first();
         $miscSettings = json_decode($miscSettings->meta_value, true);
         $cart_first_focus = $miscSettings['cart_first_focus'] ?? 'quantity';
+        
+        // Get active order types with their taxes, ordered by is_default (default first)
+        $orderTypes = \App\Models\OrderType::where('is_active', true)
+            ->with('taxes')
+            ->orderBy('is_default', 'desc')
+            ->get();
+            
         return Inertia::render('POS/POS', [
             'products' => $products,
             'urlImage' => url('storage/'),
@@ -115,7 +130,8 @@ class POSController extends Controller
             'return_sale' => false,
             'sale_id' => null,
             'categories' => $categories,
-            'cart_first_focus' => $cart_first_focus
+            'cart_first_focus' => $cart_first_focus,
+            'orderTypes' => $orderTypes
         ]);
     }
 
@@ -135,6 +151,12 @@ class POSController extends Controller
         if (!$currentStore) {
             return redirect()->route('store'); // Adjust the route name as necessary
         }
+
+        // Get active order types with their taxes, ordered by is_default (default first)
+        $orderTypes = \App\Models\OrderType::where('is_active', true)
+            ->with('taxes')
+            ->orderBy('is_default', 'desc')
+            ->get();
 
         $products = Product::select(
             'products.id',
@@ -179,7 +201,8 @@ class POSController extends Controller
             'customers' => $contacts,
             'return_sale' => true,
             'sale_id' => $sale_id,
-            'cart_first_focus' => $cart_first_focus
+            'cart_first_focus' => $cart_first_focus,
+            'orderTypes' => $orderTypes
         ]);
     }
 
@@ -199,6 +222,8 @@ class POSController extends Controller
         $reference_id = $request->input('return_sale_id');
         $sale_type = $request->input('return_sale') ? 'return' : 'sale';
         $dine_in_charge = $request->input('dine_in_charge', 0);
+        $order_type_id = $request->input('order_type_id');
+        $taxes = $request->input('taxes', []); // Get taxes from the request
 
         DB::beginTransaction();
         try {
@@ -207,6 +232,7 @@ class POSController extends Controller
                 'reference_id' => $reference_id,
                 'sale_type' => $sale_type,
                 'contact_id' => $customerID, // Assign appropriate customer ID
+                'order_type_id' => $order_type_id, // Order type ID
                 'sale_date' => $saleDate, // Current date and time
                 'total_amount' => $total, //Net total (total after discount)
                 'discount' => $discount,
@@ -274,6 +300,17 @@ class POSController extends Controller
 
                 $sale->amount_received = $amountReceived;
                 $sale->save();
+            }
+
+            // Store the taxes applied to this sale
+            if (!empty($taxes)) {
+                foreach ($taxes as $tax) {
+                    \App\Models\SalesTax::create([
+                        'sale_id' => $sale->id,
+                        'tax_id' => $tax['id'],
+                        'amount' => $tax['amount'],
+                    ]);
+                }
             }
 
             foreach ($cartItems as $item) {

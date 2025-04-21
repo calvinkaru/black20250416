@@ -49,6 +49,8 @@ class DatabaseSeeder extends Seeder
             'payroll',
             'media',
             'settings',
+            'order-types',
+            'taxes',
         ];
 
         foreach ($permissions as $permission) {
@@ -75,6 +77,8 @@ class DatabaseSeeder extends Seeder
             'payroll',
             'media',
             'settings',
+            'order-types',
+            'taxes',
         ];
         $adminRole->givePermissionTo($adminPermissions);
 
@@ -107,6 +111,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ContactSeeder::class,
             SettingSeeder::class,
+            OrderTypeSeeder::class,
+            TaxSeeder::class,
+            OrderTypeTaxSeeder::class,
         ]);
     }
 }

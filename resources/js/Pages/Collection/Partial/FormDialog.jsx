@@ -10,16 +10,19 @@ export default function FormDialog({ open, handleClose, collection }) {
   const [name, setName] = useState('');
   const [collectionType, setCollectionType] = useState('category');
   const [description, setDescription] = useState('');
+  const [displayLimit, setDisplayLimit] = useState(20);
 
   useEffect(() => {
     if (collection) {
       setName(collection.name || '');
       setCollectionType(collection.collection_type || 'category');
       setDescription(collection.description || '');
+      setDisplayLimit(collection.display_limit || 20);
     } else {
       setName('');
       setCollectionType('category');
       setDescription('');
+      setDisplayLimit(20);
     }
   }, [collection]);
 
@@ -125,6 +128,22 @@ export default function FormDialog({ open, handleClose, collection }) {
                 variant="outlined"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+              />
+            </Grid>
+            
+            <Grid size={12}>
+              {/* Display Limit */}
+              <TextField
+                margin="dense"
+                name="display_limit"
+                label="Display Limit (number of items to show in POS)"
+                type="number"
+                fullWidth
+                variant="outlined"
+                value={displayLimit}
+                onChange={(e) => setDisplayLimit(e.target.value)}
+                InputProps={{ inputProps: { min: 1 } }}
+                helperText="Number of items to display when this category is selected in POS view"
               />
             </Grid>
           </Grid>
