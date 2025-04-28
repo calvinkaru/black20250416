@@ -469,7 +469,6 @@ class ReportController extends Controller
             'contacts.name as contact_name',
             'total_amount',
             'discount',
-            DB::raw(($type === 'sale') ? 'sales.dine_in_charge as dine_in_charge' : '0 as dine_in_charge'),
             DB::raw(($type === 'sale') ? 'sales.sale_date as date' : 'purchases.purchase_date as date')
         );
         $detailsQuery = $detailsQuery->leftJoin('contacts', ($type === 'sale') ? 'sales.contact_id' : 'purchases.contact_id', '=', 'contacts.id');

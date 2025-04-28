@@ -18,6 +18,7 @@ class PermissionSeeder extends Seeder
             'order-types',
             'taxes',
             'my-drawer',
+            'cash-drawer',
         ];
 
         foreach ($newPermissions as $permission) {

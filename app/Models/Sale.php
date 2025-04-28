@@ -23,7 +23,6 @@ class Sale extends Model
         'sale_date',       // Sale date
         'total_amount',    //Net total (total after discount)
         'discount',        // Discount
-        'dine_in_charge',
         'amount_received',  // Amount received
         'profit_amount',   // Profit amount
         'status',          // Sale status ['completed', 'pending', 'refunded']

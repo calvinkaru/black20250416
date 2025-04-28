@@ -221,12 +221,17 @@ class POSController extends Controller
         $createdBy = Auth::id();
         $reference_id = $request->input('return_sale_id');
         $sale_type = $request->input('return_sale') ? 'return' : 'sale';
-        $dine_in_charge = $request->input('dine_in_charge', 0);
+        // dine_in_charge is no longer used, taxes are used instead
         $order_type_id = $request->input('order_type_id');
         $taxes = $request->input('taxes', []); // Get taxes from the request
 
         DB::beginTransaction();
         try {
+            // Ensure total is not null
+            if ($total === null) {
+                return response()->json(['error' => 'Total amount cannot be null'], 400);
+            }
+
             $sale = Sale::create([
                 'store_id' => session('store_id', Auth::user()->store_id), // Assign appropriate store ID
                 'reference_id' => $reference_id,
@@ -237,7 +242,6 @@ class POSController extends Controller
                 'total_amount' => $total, //Net total (total after discount)
                 'discount' => $discount,
                 'amount_received' => $amountReceived,
-                'dine_in_charge' => $dine_in_charge,
                 'profit_amount' => $profitAmount,
                 'status' => 'pending', // Or 'pending', or other status as needed
                 'payment_status' => 'pending',
@@ -258,47 +262,47 @@ class POSController extends Controller
                 $sale->status = 'completed';
                 $sale->payment_status = 'completed';
                 $sale->save();
-            } else {
-                foreach ($payments as $payment) {
+                } else {
+                    foreach ($payments as $payment) {
 
-                    $transactionData = [
-                        'sales_id' => $sale->id,
-                        'store_id' => $sale->store_id,
-                        'contact_id' => $sale->contact_id,
-                        'transaction_date' => $sale->sale_date,
-                        'amount' => $payment['amount'],
-                        'payment_method' => $payment['payment_method'],
-                    ];
+                        $transactionData = [
+                            'sales_id' => $sale->id,
+                            'store_id' => $sale->store_id,
+                            'contact_id' => $sale->contact_id,
+                            'transaction_date' => $sale->sale_date,
+                            'amount' => $payment['amount'],
+                            'payment_method' => $payment['payment_method'],
+                            'transaction_type' => 'sale', // Default transaction type
+                        ];
 
-                    // Check if the payment method is not 'Credit'
-                    if ($payment['payment_method'] != 'Credit') {
-                        // Determine transaction type based on the payment method
-                        if ($payment['payment_method'] == 'Account') {
-                            // Set transaction type to 'account' for account payments
+                        // Check if the payment method is 'Credit'
+                        if ($payment['payment_method'] == 'Credit') {
+                            Contact::where('id', $sale->contact_id)->decrement('balance', $payment['amount']);
+                        } 
+                        // Check if the payment method is 'Account'
+                        else if ($payment['payment_method'] == 'Account') {
                             $transactionData['transaction_type'] = 'account';
                             Contact::where('id', $sale->contact_id)->decrement('balance', $payment['amount']);
-                        } else {
-                            $transactionData['transaction_type'] = 'sale';
                         }
 
-                        // Update the total amount received
-                        $amountReceived += $payment['amount'];
+                        // Update the total amount received for all payment methods except Credit
+                        if ($payment['payment_method'] != 'Credit') {
+                            $amountReceived += $payment['amount'];
+                        }
 
                         // Create the transaction
                         Transaction::create($transactionData);
-                    } else if ($payment['payment_method'] == 'Credit') {
-                        $transactionData['transaction_type'] = 'sale';
-                        Transaction::create($transactionData);
-                        Contact::where('id', $sale->contact_id)->decrement('balance', $payment['amount']);
                     }
-                }
 
+                // Update sale status and amount received
+                $sale->amount_received = $amountReceived;
+                
+                // If amount received is greater than or equal to total, mark as completed
                 if ($amountReceived >= $total) {
                     $sale->payment_status = 'completed';
                     $sale->status = 'completed';
                 }
-
-                $sale->amount_received = $amountReceived;
+                
                 $sale->save();
             }
 

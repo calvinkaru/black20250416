@@ -34,14 +34,14 @@ export default function PaymentsCheckoutDialog({
     formData,
     is_sale = false,
 }) {
-    const { cartState, cartTotal, emptyCart, totalProfit, dineInCharge, taxes } = useCart();
+    const { cartState, cartTotal, emptyCart, totalProfit, taxes, totalWithTaxes } = useCart();
     const return_sale = usePage().props.return_sale;
     const return_sale_id = usePage().props.sale_id;
 
     const [loading, setLoading] = useState(false);
 
     const [discount, setDiscount] = useState(0);
-    const [amount, setAmount] = useState((cartTotal - discount))
+    const [amount, setAmount] = useState((totalWithTaxes - discount))
     const [payments, setPayments] = useState([])
     const [amountReceived, setAmountReceived] = useState(0)
 
@@ -64,15 +64,20 @@ export default function PaymentsCheckoutDialog({
     const handleClose = () => {
         setPayments([])
         setAmountReceived(0)
-        setAmount(cartTotal + dineInCharge - discount)
+        setAmount(totalWithTaxes - discount)
         setOpen(false);
     };
 
     useEffect(() => {
-        setAmount(cartTotal + dineInCharge - discount);
+        setAmount(totalWithTaxes - discount);
         setAmountReceived(payments.reduce((sum, payment) => sum + payment.amount, 0));
-        setAmount(cartTotal + dineInCharge - discount)
+        setAmount(totalWithTaxes - discount)
     }, [])
+
+    // Update amount when discount or totalWithTaxes changes
+    useEffect(() => {
+        setAmount(totalWithTaxes - discount);
+    }, [discount, totalWithTaxes])
 
     useEffect(() => {
         setAmountReceived(payments.reduce((sum, payment) => sum + payment.amount, 0));
@@ -97,9 +102,8 @@ export default function PaymentsCheckoutDialog({
         formJson.return_sale = return_sale;
         formJson.return_sale_id = return_sale_id;
 
-        // Add dine-in charge from context if available
-        formJson.dine_in_charge = dineInCharge || 0;
-        formJson.net_total = cartTotal + dineInCharge - discount;
+        // Ensure net_total is always a valid number
+        formJson.net_total = parseFloat((totalWithTaxes - discount).toFixed(2));
         formJson.taxes = taxes; // Include taxes in the form data
 
         let url = '/pos/checkout';
@@ -147,10 +151,10 @@ export default function PaymentsCheckoutDialog({
 
     // Function to handle the addition of a payment
     const addPayment = (paymentMethod) => {
-        const netTotal = cartTotal + dineInCharge - discount
-        const balance = amountReceived + parseFloat(amount)
+        const netTotal = totalWithTaxes - discount;
+        const balance = amountReceived + parseFloat(amount);
         if (netTotal < balance) {
-            alert('Payment cannot be exceeded the total amount')
+            alert('Payment cannot exceed the total amount');
         }
         else if (amount) {
             const newPayment = { payment_method: paymentMethod, amount: parseFloat(amount) };
@@ -158,7 +162,7 @@ export default function PaymentsCheckoutDialog({
             const newBalance = netTotal - balance;
             setAmount(newBalance > 0 ? newBalance : 0); // Clear the amount input after adding
         }
-        handlePaymentClose()
+        handlePaymentClose();
     };
 
 
@@ -173,7 +177,7 @@ export default function PaymentsCheckoutDialog({
             alert("Discount must be between 0 and 100");
             return;
         }
-        const discountAmount = (cartTotal * discount) / 100;
+        const discountAmount = (totalWithTaxes * discount) / 100;
         setDiscount(discountAmount);
     }
 
@@ -248,7 +252,7 @@ export default function PaymentsCheckoutDialog({
                                 label="Total"
                                 variant="outlined"
                                 sx={{ input: { fontWeight: 'bold', } }}
-                                value={(cartTotal + dineInCharge - discount).toFixed(2)}
+                                value={(totalWithTaxes - discount).toFixed(2)}
                                 onFocus={(event) => {
                                     event.target.select();
                                 }}
@@ -395,7 +399,7 @@ export default function PaymentsCheckoutDialog({
                         sx={{ paddingY: "15px", fontSize: "1.5rem" }}
                         type="submit"
                         // onClick={handleClose}
-                        disabled={amountReceived - (cartTotal + dineInCharge - discount) < 0 || loading || amountReceived > (cartTotal + dineInCharge - discount)} //amountReceived-(cartTotal+dineInCharge-discount)
+                        disabled={amountReceived - (totalWithTaxes - discount) < 0 || loading || amountReceived > (totalWithTaxes - discount)}
                     >
                         {loading ? 'Loading...' : 'PAY'}
                     </Button>

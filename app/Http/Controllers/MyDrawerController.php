@@ -60,12 +60,17 @@ class MyDrawerController extends Controller
                           (!$hasTempClosing || 
                            ($hasTempClosing && $latestLog && !str_contains($latestLog->description, 'Temporary Closing')));
         
-        // Calculate total cash in and cash out
-        $totalCashIn = $cashLogs->sum(function ($log) {
+        // Filter out closing cashier balance for the main table
+        $filteredLogs = $cashLogs->filter(function ($log) {
+            return !str_contains($log->description, 'Closing Cashier Balance');
+        })->values();
+        
+        // Calculate total cash in and cash out (excluding closing balance)
+        $totalCashIn = $filteredLogs->sum(function ($log) {
             return $log->amount > 0 ? $log->amount : 0;
         });
         
-        $totalCashOut = $cashLogs->sum(function ($log) {
+        $totalCashOut = $filteredLogs->sum(function ($log) {
             return $log->amount < 0 ? abs($log->amount) : 0;
         });
         
@@ -124,7 +129,8 @@ class MyDrawerController extends Controller
             $source = 'withdrawal';
             $description = $description ?: "Withdrawal - " . Carbon::now()->format('h:mm A');
         } elseif ($request->transaction_type === 'close_cashier') {
-            $amount = -abs($amount); // Closing cashier balance as negative cash out
+            // Store the actual counted amount as a positive value
+            $amount = abs($amount);
             $actualTransactionType = 'cash_out';
             $source = 'withdrawal';
             $description = $description ?: "Closing Cashier Balance - " . Carbon::now()->format('h:mm A');

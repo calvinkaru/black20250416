@@ -225,6 +225,10 @@ Route::middleware('auth')->group(function () {
         });
         return 'Mail sent';
     });
+
 });
+
+// Test route for credit card payment
+Route::post('/api/test-card-payment', [App\Http\Controllers\TestController::class, 'testCardPayment'])->withoutMiddleware(['web', 'csrf']);
 
 require __DIR__ . '/auth.php';

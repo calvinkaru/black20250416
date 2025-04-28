@@ -279,19 +279,25 @@ export default function MyDrawerIndex({ logs, hasOpeningBalance, hasClosingBalan
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {dataLogs.map((row, index) => (
+                                {dataLogs.filter(log => !log.description || !log.description.includes('Closing Cashier Balance')).map((row, index) => (
                                     <StyledTableRow key={index}>
                                         <StyledTableCell component="th" scope="row">
                                             {index + 1}
                                         </StyledTableCell>
                                         <StyledTableCell align="left" sx={{ whiteSpace: 'nowrap' }}>
-                                            {row.description ? row.description.split(' - ')[1] || '' : ''}
+                                            {row.description && row.description.includes(' - ') 
+                                                ? row.description.split(' - ')[1] 
+                                                : ''}
                                         </StyledTableCell>
                                         <StyledTableCell align="left">
-                                            {row.description ? row.description.split(' - ')[0] || row.description : ''}
+                                            {row.description 
+                                                ? (row.description.includes(' - ') 
+                                                    ? row.description.split(' - ')[0] 
+                                                    : row.description)
+                                                : ''}
                                         </StyledTableCell>
                                         <StyledTableCell align="right">
-                                            {row.amount > 0 ? numeral(row.amount).format('0,0.00') : '-'}
+                                            {row.amount > 0 && !row.description.includes('Closing Cashier Balance') ? numeral(row.amount).format('0,0.00') : '-'}
                                         </StyledTableCell>
                                         <StyledTableCell align="right">
                                             {row.amount < 0 ? numeral(Math.abs(row.amount)).format('0,0.00') : '-'}
@@ -317,28 +323,48 @@ export default function MyDrawerIndex({ logs, hasOpeningBalance, hasClosingBalan
                                     </StyledTableCell>
                                 </StyledTableRow>
 
-                                {/* Row for displaying the total sum */}
-                                <StyledTableRow>
-                                    <StyledTableCell colSpan={4} align="right">
-                                        <Typography variant="h5" color="initial">
-                                            <strong>Balance:</strong>
-                                        </Typography>
-                                    </StyledTableCell>
-                                    <StyledTableCell align="right">
-                                        <Typography variant="h5" color="initial">
-                                            <strong>
-                                                {numeral(currentBalance).format('0,0.00')}
-                                            </strong>
-                                        </Typography>
-                                    </StyledTableCell>
-                                </StyledTableRow>
-                                
+                                {/* Row for displaying the expected balance */}
                                 {hasClosingBalance && (
                                     <>
-                                        <StyledTableRow>
-                                            <StyledTableCell colSpan={5} align="right">
-                                            </StyledTableCell>
-                                        </StyledTableRow>
+                                        {/* Closing Cashier Balance Row */}
+                                        {dataLogs.some(log => log.description && log.description.includes('Closing Cashier Balance')) && (
+                                            (() => {
+                                                // Find the closing log
+                                                const closingLog = dataLogs.find(log => 
+                                                    log.description && log.description.includes('Closing Cashier Balance')
+                                                );
+                                                
+                                                // Get time and description
+                                                const time = closingLog && closingLog.description && closingLog.description.includes(' - ') 
+                                                    ? closingLog.description.split(' - ')[1] 
+                                                    : '';
+                                                const description = closingLog && closingLog.description 
+                                                    ? (closingLog.description.includes(' - ') 
+                                                        ? closingLog.description.split(' - ')[0] 
+                                                        : closingLog.description)
+                                                    : '';
+                                                
+                                                return (
+                                                    <StyledTableRow>
+                                                        <StyledTableCell component="th" scope="row">
+                                                            <strong>*</strong>
+                                                        </StyledTableCell>
+                                                        <StyledTableCell align="left" sx={{ whiteSpace: 'nowrap' }}>
+                                                            <strong>{time}</strong>
+                                                        </StyledTableCell>
+                                                        <StyledTableCell align="left">
+                                                            <strong>{description}</strong>
+                                                        </StyledTableCell>
+                                                        <StyledTableCell align="right">
+                                                            <strong>-</strong>
+                                                        </StyledTableCell>
+                                                        <StyledTableCell align="right">
+                                                            <strong>{numeral(closingLog.amount).format('0,0.00')}</strong>
+                                                        </StyledTableCell>
+                                                    </StyledTableRow>
+                                                );
+                                            })()
+                                        )}
                                         
                                         {/* Expected Balance Row */}
                                         <StyledTableRow>
@@ -364,13 +390,20 @@ export default function MyDrawerIndex({ logs, hasOpeningBalance, hasClosingBalan
                                                     log.description && log.description.includes('Closing Cashier Balance')
                                                 );
                                                 
-                                                // Extract the counted amount
-                                                const countedAmount = closingLog ? Math.abs(closingLog.amount) : 0;
+                                                // Extract the counted amount - now stored as a positive value
+                                                const countedAmount = closingLog ? closingLog.amount : 0;
                                                 
                                                 // Calculate difference
-                                                const diff = countedAmount - currentBalance;
+                                                console.log("Calculating difference:");
+                                                console.log("Current Balance:", currentBalance);
+                                                console.log("Counted Amount:", countedAmount);
+                                                console.log("Difference:", currentBalance - countedAmount);
                                                 
-                                                return diff !== 0 ? (
+                                                // Calculate the difference
+                                                const diff = currentBalance - countedAmount;
+                                                
+                                                // Always show the difference row
+                                                return (
                                                     <StyledTableRow>
                                                         <StyledTableCell colSpan={4} align="right">
                                                             <Typography variant="h6" color="initial">
@@ -380,17 +413,17 @@ export default function MyDrawerIndex({ logs, hasOpeningBalance, hasClosingBalan
                                                         <StyledTableCell align="right">
                                                             <Typography 
                                                                 variant="h6" 
-                                                                color={diff > 0 ? 'success.main' : 'error.main'}
+                                                                color={diff > 0 ? 'error.main' : 'success.main'}
                                                             >
                                                                 <strong>
                                                                     {numeral(diff).format('0,0.00')}
                                                                     {' '}
-                                                                    {diff > 0 ? '(Excess)' : '(Shortage)'}
+                                                                    {diff > 0 ? '(Shortage)' : '(Excess)'}
                                                                 </strong>
                                                             </Typography>
                                                         </StyledTableCell>
                                                     </StyledTableRow>
-                                                ) : null;
+                                                );
                                             })()
                                         )}
                                     </>

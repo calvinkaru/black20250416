@@ -44,10 +44,34 @@ class Transaction extends Model
             if ($this->amount < 0) {
                 // If amount is negative, it's a refund, so it's 'cash_out' in the CashLog
                 $transactionType = 'cash_out';
-                $description = 'Refund';
+                $description = 'Refund - ' . now()->format('h:i A');
             } else {
                 // Normal cash transaction
                 $transactionType = 'cash_in';
+                
+                // Get the sale information if available
+                $sale = $this->sale;
+                if ($sale) {
+                    $description = 'Sale #' . ($sale->invoice_number ?? $sale->id) . ' - ' . now()->format('h:i A');
+                    
+                    // Log for debugging
+                    \Illuminate\Support\Facades\Log::info('Creating CashLog for sale', [
+                        'sale_id' => $sale->id,
+                        'invoice_number' => $sale->invoice_number,
+                        'description' => $description,
+                        'transaction_id' => $this->id,
+                        'amount' => $this->amount,
+                    ]);
+                } else {
+                    $description = 'Cash Payment - ' . now()->format('h:i A');
+                    
+                    // Log for debugging
+                    \Illuminate\Support\Facades\Log::info('Creating CashLog for cash payment', [
+                        'description' => $description,
+                        'transaction_id' => $this->id,
+                        'amount' => $this->amount,
+                    ]);
+                }
             }
 
             // Create the cash log entry using the values from the transaction

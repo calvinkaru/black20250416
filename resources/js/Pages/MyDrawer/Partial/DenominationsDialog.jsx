@@ -102,6 +102,18 @@ export default function DenominationsDialog({
         Object.entries(denominationsState).forEach(([value, count]) => {
             total += parseFloat(value) * parseInt(count || 0);
         });
+        
+        // Log the calculation for debugging
+        console.log("Denomination calculation:");
+        Object.entries(denominationsState).forEach(([value, count]) => {
+            if (parseInt(count || 0) > 0) {
+                console.log(`${value} x ${count} = ${parseFloat(value) * parseInt(count || 0)}`);
+            }
+        });
+        console.log(`Total: ${total}`);
+        console.log(`Current Balance: ${currentBalance}`);
+        console.log(`Difference: ${total - currentBalance}`);
+        
         setTotalAmount(total);
         setDifference(total - currentBalance);
     }, [denominationsState, currentBalance]);
@@ -129,9 +141,39 @@ export default function DenominationsDialog({
         const currentTime = dayjs().format('h:mm A');
         const description = "Closing Cashier Balance - " + currentTime;
         
+        // Check if the counted amount is significantly different from the expected balance
+        if (Math.abs(totalAmount - currentBalance) > currentBalance * 10) {
+            // Show a confirmation dialog
+            Swal.fire({
+                title: 'Confirm Amount',
+                html: `
+                    <p>The amount you entered (${numeral(totalAmount).format('0,0.00')}) is very different from the expected balance (${numeral(currentBalance).format('0,0.00')}).</p>
+                    <p>Are you sure this is correct?</p>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, it\'s correct',
+                cancelButtonText: 'No, let me fix it'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // User confirmed, proceed with submission
+                    submitForm(description, currentBalance);
+                } else {
+                    // User cancelled, allow them to fix the amount
+                    setLoading(false);
+                }
+            });
+        } else {
+            // Amount is reasonable, proceed with submission
+            submitForm(description, totalAmount);
+        }
+    };
+    
+    // Function to submit the form data
+    const submitForm = (description, amount) => {
         // Prepare data for submission
         const formData = {
-            amount: totalAmount,
+            amount: amount,
             description: description,
             transaction_type: "close_cashier",
             denominations: denominationsState,

@@ -205,13 +205,15 @@ function AuthenticatedLayout({ header, children, ...props }) {
                         selected={isSelected("/sales")}
                     />
                 )}
-                <NavItem
-                    href="/reports/dailycash"
-                    icon={WorkIcon}
-                    label="Cash Drawer"
-                    open={open}
-                    selected={isSelected("/reports/dailycash")}
-                />
+                {permissions.includes("cash-drawer") && (
+                    <NavItem
+                        href="/reports/dailycash"
+                        icon={WorkIcon}
+                        label="Cash Drawer"
+                        open={open}
+                        selected={isSelected("/reports/dailycash")}
+                    />
+                )}
                 
                 {permissions.includes("my-drawer") && (
                     <NavItem

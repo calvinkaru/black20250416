@@ -32,7 +32,6 @@ class SaleController extends Controller
             'sale_date',              // Sale date
             'total_amount',           // Total amount (Total amount after discount [net_total - discount])
             'discount',                // Discount
-            'dine_in_charge',          // Dine in charge
             'amount_received',         // Amount received
             'profit_amount',          // Profit amount
             'status',
@@ -104,7 +103,6 @@ class SaleController extends Controller
             'sale_date',              // Sale date
             'total_amount',           // Total amount (Total amount after discount [net_total - discount])
             'discount',                // Discount
-            'dine_in_charge',          // Dine in charge
             'amount_received',         // Amount received
             'status',                  // Sale status
             'stores.address',
@@ -240,7 +238,6 @@ class SaleController extends Controller
             'sale_date',              // Sale date
             'total_amount',           // Total amount (Total amount after discount [net_total - discount])
             'discount',                // Discount
-            'dine_in_charge',          // Dine in charge
             'amount_received',         // Amount received
             'status',                  // Sale status
             'stores.address',
@@ -266,7 +263,6 @@ class SaleController extends Controller
             'sale_date',
             'total_amount',
             'discount',
-            'dine_in_charge',
             'amount_received',
             'status',
             'stores.address',
@@ -321,7 +317,6 @@ class SaleController extends Controller
             'sale_date' => now(), // Set the current date for the merged sale
             'total_amount' => $sales->sum('total_amount'), // Sum of total amounts
             'discount' => $sales->sum('discount'), // Sum of discounts
-            'dine_in_charge' => $sales->sum('dine_in_charge'), // Sum of dine in charges
             'amount_received' => $sales->sum('amount_received'), // Sum of amounts received
             'address' => $sales->first()->address, // Use the first sale's address
             'name' => $sales->first()->name . ' | Balance: ' . $sales->first()->balance, // Use the first sale's customer name
