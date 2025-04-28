@@ -28,3 +28,9 @@ Homestead.json
 .env.production
 .phpactor.json
 auth.json
+
+# Ignore root-level test files
+/test_*.php
+
+# Ignore the tests directory
+/tests/
