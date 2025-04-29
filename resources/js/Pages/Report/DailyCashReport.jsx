@@ -3,9 +3,10 @@ import { useState, useEffect } from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, router, usePage } from "@inertiajs/react";
 import Grid from "@mui/material/Grid2";
-import { Button, TextField, Typography, MenuItem } from "@mui/material";
+import { Button, TextField, Typography, MenuItem, Box } from "@mui/material";
 import FindReplaceIcon from "@mui/icons-material/FindReplace";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
+import PrintIcon from "@mui/icons-material/Print";
 import dayjs from "dayjs";
 import axios from "axios";
 import numeral from "numeral";
@@ -90,6 +91,241 @@ export default function DailyReport({ logs, stores, users }) {
 
     const totalCashIn = dataLogs.reduce((sum, row) => sum + parseFloat(row.cash_in), 0);
     const totalCashOut = dataLogs.reduce((sum, row) => sum + parseFloat(row.cash_out), 0);
+    
+    const handleBillPrint = () => {
+        // Create a styled print version for bill printer (receipt style)
+        const printStyles = `
+            <style>
+                @page { 
+                    size: 80mm auto; /* Standard thermal receipt width */
+                    margin: 0mm;
+                }
+                body { 
+                    font-family: 'Courier New', monospace; /* Use monospace font for receipt */
+                    font-size: 12px;
+                    width: 80mm;
+                    margin: 0;
+                    padding: 5mm;
+                }
+                .receipt-container {
+                    width: 100%;
+                    text-align: center;
+                }
+                .shop-name {
+                    font-size: 16px;
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                }
+                .receipt-header {
+                    text-align: center;
+                    margin-bottom: 10px;
+                }
+                .receipt-details {
+                    text-align: left;
+                    margin-bottom: 10px;
+                    font-size: 12px;
+                }
+                .divider {
+                    border-top: 1px dashed #000;
+                    margin: 5px 0;
+                }
+                table { 
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 10px 0;
+                }
+                th, td { 
+                    padding: 3px 2px;
+                    text-align: left;
+                    font-size: 12px;
+                    border: none;
+                }
+                th { 
+                    font-weight: bold;
+                }
+                .text-right { 
+                    text-align: right; 
+                }
+                .text-center { 
+                    text-align: center; 
+                }
+                .receipt-footer {
+                    text-align: center;
+                    margin-top: 10px;
+                    font-size: 12px;
+                }
+                .total-row {
+                    font-weight: bold;
+                }
+                .summary-section {
+                    margin-top: 5px;
+                }
+                .summary-row {
+                    display: flex;
+                    justify-content: space-between;
+                    margin: 3px 0;
+                }
+                .bold {
+                    font-weight: bold;
+                }
+            </style>
+        `;
+        
+        // Create receipt content
+        let receiptContent = `
+            <div class="receipt-container">
+                <div class="receipt-header">
+                    <div class="shop-name">DAILY CASH REPORT</div>
+                    <div>Date: ${formState.transaction_date}</div>
+                    <div>Time: ${new Date().toLocaleTimeString()}</div>
+                </div>
+                <div class="divider"></div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>DESCRIPTION</th>
+                            <th class="text-right">IN</th>
+                            <th class="text-right">OUT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        // Add rows for each transaction
+        dataLogs.forEach((row, index) => {
+            const description = row.source.charAt(0).toUpperCase() + row.source.slice(1) +
+                (row.description ? " | " + row.description : "");
+                
+            receiptContent += `
+                <tr>
+                    <td colspan="3">${index + 1}. ${description.substring(0, 30)}${description.length > 30 ? '...' : ''}</td>
+                </tr>
+                <tr>
+                    <td>${row.transaction_date}</td>
+                    <td class="text-right">${row.cash_in > 0 ? numeral(row.cash_in).format('0,0.00') : '-'}</td>
+                    <td class="text-right">${row.cash_out > 0 ? numeral(row.cash_out).format('0,0.00') : '-'}</td>
+                </tr>
+            `;
+        });
+        
+        // Add subtotal row
+        receiptContent += `
+                    </tbody>
+                </table>
+                
+                <div class="divider"></div>
+                
+                <div class="summary-section">
+                    <div class="summary-row">
+                        <span class="bold">Total Cash In:</span>
+                        <span>${numeral(totalCashIn).format('0,0.00')}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="bold">Total Cash Out:</span>
+                        <span>${numeral(totalCashOut).format('0,0.00')}</span>
+                    </div>
+                </div>
+        `;
+        
+        // Add balance
+        const balance = dataLogs.reduce((total, row) => total + parseFloat(row.amount), 0);
+        const isShortage = balance > 0;
+        
+        receiptContent += `
+            <div class="divider"></div>
+            <div class="summary-section">
+                <div class="summary-row">
+                    <span class="bold">Balance:</span>
+                    <span>${numeral(Math.abs(balance)).format('0,0.00')} ${isShortage ? '(Shortage)' : '(Excess)'}</span>
+                </div>
+            </div>
+        `;
+        
+        // Add footer
+        receiptContent += `
+                <div class="divider"></div>
+                <div class="receipt-footer">
+                    *** End of Report ***
+                </div>
+            </div>
+        `;
+        
+        // Open print window
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Daily Cash Report - Receipt Format</title>
+                    ${printStyles}
+                </head>
+                <body>
+                    ${receiptContent}
+                </body>
+            </html>
+        `);
+        
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+    };
+    
+    const handlePrint = () => {
+        const printContent = document.querySelector('table');
+        const originalContents = document.body.innerHTML;
+        
+        // Create a styled print version
+        const printStyles = `
+            <style>
+                body { font-family: Arial, sans-serif; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #f2f2f2; }
+                .text-right { text-align: right; }
+                .header { text-align: center; margin-bottom: 20px; }
+                .footer { text-align: center; margin-top: 30px; font-size: 12px; }
+                .total-row { font-weight: bold; }
+            </style>
+        `;
+        
+        // Create header with date and time
+        const header = `
+            <div class="header">
+                <h2>Daily Cash Report</h2>
+                <p>Date: ${formState.transaction_date}</p>
+                <p>Time: ${new Date().toLocaleTimeString()}</p>
+            </div>
+        `;
+        
+        // Create footer
+        const footer = `
+            <div class="footer">
+                <p>*** End of Report ***</p>
+            </div>
+        `;
+        
+        // Open print window
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Daily Cash Report</title>
+                    ${printStyles}
+                </head>
+                <body>
+                    ${header}
+                    ${printContent.outerHTML}
+                    ${footer}
+                </body>
+            </html>
+        `);
+        
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+    };
 
     return (
         <AuthenticatedLayout>
@@ -194,6 +430,24 @@ export default function DailyReport({ logs, stores, users }) {
 
             <Grid container justifyContent={'center'}>
                 <Paper sx={{ width: { xs: '94vw', sm: '100%' }, overflow: 'hidden', maxWidth: '900px' }} >
+                    <Box sx={{ p: 2, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                        <Button
+                            variant="outlined"
+                            color="primary"
+                            onClick={handlePrint}
+                            startIcon={<PrintIcon />}
+                        >
+                            Print Transactions
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            color="secondary"
+                            onClick={handleBillPrint}
+                            startIcon={<PrintIcon />}
+                        >
+                            Bill Printer
+                        </Button>
+                    </Box>
                     <TableContainer>
                         <Table>
                             <TableHead>
@@ -275,12 +529,22 @@ export default function DailyReport({ logs, stores, users }) {
                                         </Typography>
                                     </StyledTableCell>
                                     <StyledTableCell align="right">
-                                        <Typography variant="h5" color="initial">
-                                            <strong>
-                                                {numeral(dataLogs.reduce((total, row) => total + parseFloat(row.amount), 0)).format('0,0.00')}
-                                            </strong>
-                                        </Typography>
-
+                                        {(() => {
+                                            const balance = dataLogs.reduce((total, row) => total + parseFloat(row.amount), 0);
+                                            const isShortage = balance > 0;
+                                            return (
+                                                <Typography 
+                                                    variant="h5" 
+                                                    color={isShortage ? 'error.main' : 'success.main'}
+                                                >
+                                                    <strong>
+                                                        {numeral(Math.abs(balance)).format('0,0.00')}
+                                                        {' '}
+                                                        {isShortage ? '(Shortage)' : '(Excess)'}
+                                                    </strong>
+                                                </Typography>
+                                            );
+                                        })()}
                                     </StyledTableCell>
                                 </StyledTableRow>
                             </TableBody>

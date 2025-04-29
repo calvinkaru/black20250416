@@ -129,8 +129,8 @@ class MyDrawerController extends Controller
             $source = 'withdrawal';
             $description = $description ?: "Withdrawal - " . Carbon::now()->format('h:mm A');
         } elseif ($request->transaction_type === 'close_cashier') {
-            // Store the actual counted amount as a positive value
-            $amount = abs($amount);
+            // Store the actual counted amount as a negative value to be consistent with withdrawals
+            $amount = -abs($amount);
             $actualTransactionType = 'cash_out';
             $source = 'withdrawal';
             $description = $description ?: "Closing Cashier Balance - " . Carbon::now()->format('h:mm A');

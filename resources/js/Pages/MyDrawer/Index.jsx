@@ -73,6 +73,208 @@ export default function MyDrawerIndex({ logs, hasOpeningBalance, hasClosingBalan
         }
     };
     
+    const handleBillPrint = () => {
+        // Create a styled print version for bill printer (receipt style)
+        const printStyles = `
+            <style>
+                @page { 
+                    size: 80mm auto; /* Standard thermal receipt width */
+                    margin: 0mm;
+                }
+                body { 
+                    font-family: 'Courier New', monospace; /* Use monospace font for receipt */
+                    font-size: 12px;
+                    width: 80mm;
+                    margin: 0;
+                    padding: 5mm;
+                }
+                .receipt-container {
+                    width: 100%;
+                    text-align: center;
+                }
+                .shop-name {
+                    font-size: 16px;
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                }
+                .receipt-header {
+                    text-align: center;
+                    margin-bottom: 10px;
+                }
+                .receipt-details {
+                    text-align: left;
+                    margin-bottom: 10px;
+                    font-size: 12px;
+                }
+                .divider {
+                    border-top: 1px dashed #000;
+                    margin: 5px 0;
+                }
+                table { 
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 10px 0;
+                }
+                th, td { 
+                    padding: 3px 2px;
+                    text-align: left;
+                    font-size: 12px;
+                    border: none;
+                }
+                th { 
+                    font-weight: bold;
+                }
+                .text-right { 
+                    text-align: right; 
+                }
+                .text-center { 
+                    text-align: center; 
+                }
+                .receipt-footer {
+                    text-align: center;
+                    margin-top: 10px;
+                    font-size: 12px;
+                }
+                .total-row {
+                    font-weight: bold;
+                }
+                .summary-section {
+                    margin-top: 5px;
+                }
+                .summary-row {
+                    display: flex;
+                    justify-content: space-between;
+                    margin: 3px 0;
+                }
+                .bold {
+                    font-weight: bold;
+                }
+            </style>
+        `;
+        
+        // Create receipt content
+        let receiptContent = `
+            <div class="receipt-container">
+                <div class="receipt-header">
+                    <div class="shop-name">MY DRAWER</div>
+                    <div>Transaction Report</div>
+                    <div>Date: ${new Date().toLocaleDateString()}</div>
+                    <div>Time: ${new Date().toLocaleTimeString()}</div>
+                </div>
+                <div class="divider"></div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>DESCRIPTION</th>
+                            <th class="text-right">IN</th>
+                            <th class="text-right">OUT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        // Add rows for each transaction
+        dataLogs.filter(log => !log.description || !log.description.includes('Closing Cashier Balance')).forEach((row, index) => {
+            const description = row.description 
+                ? (row.description.includes(' - ') 
+                    ? row.description.split(' - ')[0] 
+                    : row.description)
+                : '';
+            
+            const time = row.description && row.description.includes(' - ') 
+                ? row.description.split(' - ')[1] 
+                : '';
+                
+            receiptContent += `
+                <tr>
+                    <td colspan="3">${index + 1}. ${description.substring(0, 30)}</td>
+                </tr>
+                <tr>
+                    <td>${time}</td>
+                    <td class="text-right">${row.amount > 0 ? numeral(row.amount).format('0,0.00') : '-'}</td>
+                    <td class="text-right">${row.amount < 0 ? numeral(Math.abs(row.amount)).format('0,0.00') : '-'}</td>
+                </tr>
+            `;
+        });
+        
+        // Add subtotal row
+        receiptContent += `
+                    </tbody>
+                </table>
+                
+                <div class="divider"></div>
+                
+                <div class="summary-section">
+                    <div class="summary-row">
+                        <span class="bold">Total Cash In:</span>
+                        <span>${numeral(totalCashIn).format('0,0.00')}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="bold">Total Cash Out:</span>
+                        <span>${numeral(totalCashOut).format('0,0.00')}</span>
+                    </div>
+                </div>
+        `;
+        
+        // Add closing balance if available
+        if (hasClosingBalance && dataLogs.some(log => log.description && log.description.includes('Closing Cashier Balance'))) {
+            const closingLog = dataLogs.find(log => 
+                log.description && log.description.includes('Closing Cashier Balance')
+            );
+            
+            // Calculate difference
+            const countedAmount = closingLog ? Math.abs(closingLog.amount) : 0;
+            const diff = currentBalance - countedAmount;
+            
+            receiptContent += `
+                <div class="divider"></div>
+                <div class="summary-section">
+                    <div class="summary-row">
+                        <span class="bold">Closing Balance:</span>
+                        <span>${numeral(Math.abs(closingLog.amount)).format('0,0.00')}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="bold">Expected Balance:</span>
+                        <span>${numeral(currentBalance).format('0,0.00')}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="bold">Difference:</span>
+                        <span>${numeral(Math.abs(diff)).format('0,0.00')} ${diff > 0 ? '(Shortage)' : '(Excess)'}</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Add footer
+        receiptContent += `
+                <div class="divider"></div>
+                <div class="receipt-footer">
+                    *** End of Report ***
+                </div>
+            </div>
+        `;
+        
+        // Open print window
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>My Drawer - Receipt Format</title>
+                    ${printStyles}
+                </head>
+                <body>
+                    ${receiptContent}
+                </body>
+            </html>
+        `);
+        
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+    };
+    
     const handlePrint = () => {
         const printContent = document.getElementById('drawer-transactions-table');
         const originalContents = document.body.innerHTML;
@@ -248,7 +450,7 @@ export default function MyDrawerIndex({ logs, hasOpeningBalance, hasClosingBalan
                 <Grid container justifyContent={'center'}>
                     <Paper sx={{ width: { xs: '94vw', sm: '100%' }, overflow: 'hidden', maxWidth: '900px' }} >
                         {showPrintButton && (
-                            <Box sx={{ p: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                            <Box sx={{ p: 2, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
                                 <Button
                                     variant="outlined"
                                     color="primary"
@@ -256,6 +458,14 @@ export default function MyDrawerIndex({ logs, hasOpeningBalance, hasClosingBalan
                                     startIcon={<PrintIcon />}
                                 >
                                     Print Transactions
+                                </Button>
+                                <Button
+                                    variant="outlined"
+                                    color="secondary"
+                                    onClick={handleBillPrint}
+                                    startIcon={<PrintIcon />}
+                                >
+                                    Bill Printer
                                 </Button>
                             </Box>
                         )}
@@ -359,7 +569,7 @@ export default function MyDrawerIndex({ logs, hasOpeningBalance, hasClosingBalan
                                                             <strong>-</strong>
                                                         </StyledTableCell>
                                                         <StyledTableCell align="right">
-                                                            <strong>{numeral(closingLog.amount).format('0,0.00')}</strong>
+                                                            <strong>{numeral(Math.abs(closingLog.amount)).format('0,0.00')}</strong>
                                                         </StyledTableCell>
                                                     </StyledTableRow>
                                                 );
@@ -390,8 +600,8 @@ export default function MyDrawerIndex({ logs, hasOpeningBalance, hasClosingBalan
                                                     log.description && log.description.includes('Closing Cashier Balance')
                                                 );
                                                 
-                                                // Extract the counted amount - now stored as a positive value
-                                                const countedAmount = closingLog ? closingLog.amount : 0;
+                                                // Extract the counted amount - now stored as a negative value
+                                                const countedAmount = closingLog ? Math.abs(closingLog.amount) : 0;
                                                 
                                                 // Calculate difference
                                                 console.log("Calculating difference:");
