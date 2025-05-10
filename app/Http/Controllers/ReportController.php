@@ -100,6 +100,7 @@ class ReportController extends Controller
             'transaction_type' => 'required|in:deposit,withdrawal,open_cashier,close_cashier',
             'description' => 'nullable|string|max:255',
             'store_id' => 'required|exists:stores,id',
+            'user_id' => 'required|exists:users,id',
         ]);
 
         $amount = $request->amount;
@@ -131,6 +132,7 @@ class ReportController extends Controller
         $cashLog->transaction_type = $actualTransactionType;
         $cashLog->store_id = $request->store_id;
         $cashLog->source = $source;
+        $cashLog->created_by = $request->user_id; // Set the user_id as created_by
         // Save the transaction
         $cashLog->save();
 
@@ -505,6 +507,49 @@ class ReportController extends Controller
         $report['total_expenses'] += $report['salary_expense'];
         return Inertia::render('Report/SummaryReport', [
             'pageLabel' => 'Summary Report',
+            'stores' => $stores,
+            'report' => $report,
+        ]);
+    }
+    
+    public function getTaxSummaryReport(Request $request)
+    {
+        $stores = Store::forCurrentUser()->select('id', 'name')->get();
+        
+        $start_date = $request->input('start_date', Carbon::today()->toDateString());
+        $end_date = $request->input('end_date', Carbon::today()->toDateString());
+        $store_id = $request->input('store', 'All');
+        
+        // Get all taxes
+        $taxes = \App\Models\Tax::where('is_active', true)->get();
+        
+        // Initialize the report array
+        $report = [];
+        
+        // For each tax, calculate the total amount collected in the date range
+        foreach ($taxes as $tax) {
+            $query = \App\Models\SalesTax::query()
+                ->join('sales', 'sales_taxes.sale_id', '=', 'sales.id')
+                ->where('sales_taxes.tax_id', $tax->id)
+                ->whereBetween('sales.sale_date', [$start_date, $end_date]);
+                
+            if ($store_id !== 'All') {
+                $query->where('sales.store_id', $store_id);
+            }
+            
+            $totalAmount = $query->sum('sales_taxes.amount');
+            
+            $report[] = [
+                'id' => $tax->id,
+                'name' => $tax->name,
+                'type' => $tax->type,
+                'rate' => $tax->rate,
+                'total_amount' => $totalAmount
+            ];
+        }
+        
+        return Inertia::render('Report/TaxSummaryReport', [
+            'pageLabel' => 'Tax Summary',
             'stores' => $stores,
             'report' => $report,
         ]);

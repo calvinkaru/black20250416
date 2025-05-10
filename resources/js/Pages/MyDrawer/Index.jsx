@@ -330,6 +330,139 @@ export default function MyDrawerIndex({ logs, hasOpeningBalance, hasClosingBalan
         printWindow.print();
         printWindow.close();
     };
+    
+    const handleSalesSummaryPrint = () => {
+        // Get today's date in YYYY-MM-DD format
+        // This will use the browser's timezone which should match the server's timezone set in settings
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Fetch sales summary data for today
+        axios.post('/dashboard/summary', {
+            start_date: today,
+            end_date: today
+        })
+        .then(response => {
+            const data = response.data.summary;
+            
+            // Create a styled print version
+            const printStyles = `
+                <style>
+                    @page { 
+                        size: 80mm auto; /* Standard thermal receipt width */
+                        margin: 0mm;
+                    }
+                    body { 
+                        font-family: 'Courier New', monospace;
+                        font-size: 12px;
+                        width: 80mm;
+                        margin: 0;
+                        padding: 5mm;
+                    }
+                    .receipt-container {
+                        width: 100%;
+                        text-align: center;
+                    }
+                    .shop-name {
+                        font-size: 16px;
+                        font-weight: bold;
+                        margin-bottom: 5px;
+                    }
+                    .receipt-header {
+                        text-align: center;
+                        margin-bottom: 10px;
+                    }
+                    .divider {
+                        border-top: 1px dashed #000;
+                        margin: 5px 0;
+                    }
+                    .summary-section {
+                        margin-top: 10px;
+                        text-align: left;
+                    }
+                    .summary-row {
+                        display: flex;
+                        justify-content: space-between;
+                        margin: 5px 0;
+                    }
+                    .bold {
+                        font-weight: bold;
+                    }
+                    .receipt-footer {
+                        text-align: center;
+                        margin-top: 10px;
+                        font-size: 12px;
+                    }
+                </style>
+            `;
+            
+            // Create receipt content
+            let receiptContent = `
+                <div class="receipt-container">
+                    <div class="receipt-header">
+                        <div class="shop-name">SALES SUMMARY</div>
+                        <div>Date: ${today}</div>
+                        <div>Time: ${new Date().toLocaleTimeString()}</div>
+                    </div>
+                    <div class="divider"></div>
+                    
+                    <div class="summary-section">
+                        <div class="summary-row">
+                            <span class="bold">Total Sales:</span>
+                            <span>${numeral(data.total_sales).format('0,0.00')}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="bold">Cash:</span>
+                            <span>${numeral(data.cash).format('0,0.00')}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="bold">Cheque:</span>
+                            <span>${numeral(data.cheque).format('0,0.00')}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="bold">Credit:</span>
+                            <span>${numeral(data.credit).format('0,0.00')}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="bold">Card:</span>
+                            <span>${numeral(data.card).format('0,0.00')}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="divider"></div>
+                    <div class="receipt-footer">
+                        *** End of Report ***
+                    </div>
+                </div>
+            `;
+            
+            // Open print window
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Sales Summary</title>
+                        ${printStyles}
+                    </head>
+                    <body>
+                        ${receiptContent}
+                    </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+        })
+        .catch(error => {
+            console.error('Error fetching sales summary:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to fetch sales summary data'
+            });
+        });
+    };
 
     return (
         <AuthenticatedLayout>
@@ -448,7 +581,7 @@ export default function MyDrawerIndex({ logs, hasOpeningBalance, hasClosingBalan
             
             {(showTable || hasClosingBalance) && (
                 <Grid container justifyContent={'center'}>
-                    <Paper sx={{ width: { xs: '94vw', sm: '100%' }, overflow: 'hidden', maxWidth: '900px' }} >
+                    <Paper sx={{ width: { xs: '100%', sm: '100%' }, overflow: 'hidden', maxWidth: '1200px' }} >
                         {showPrintButton && (
                             <Box sx={{ p: 2, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
                                 <Button
@@ -466,6 +599,14 @@ export default function MyDrawerIndex({ logs, hasOpeningBalance, hasClosingBalan
                                     startIcon={<PrintIcon />}
                                 >
                                     Bill Printer
+                                </Button>
+                                <Button
+                                    variant="outlined"
+                                    color="success"
+                                    onClick={handleSalesSummaryPrint}
+                                    startIcon={<PrintIcon />}
+                                >
+                                    Sales Summary
                                 </Button>
                             </Box>
                         )}

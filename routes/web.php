@@ -170,6 +170,7 @@ Route::middleware('auth')->group(function () {
     Route::get('reports/{id}/customer', [ReportController::class, 'getCustomerReport'])->name('reports.customer');
     Route::get('reports/{id}/vendor', [ReportController::class, 'getVendorReport'])->name('reports.vendor');
     Route::get('reports/summary-report', [ReportController::class, 'getSummaryReport'])->name('reports.summary');
+    Route::get('reports/tax-summary', [ReportController::class, 'getTaxSummaryReport'])->name('reports.tax-summary');
     
     // My Drawer Routes
     Route::get('/my-drawer', [MyDrawerController::class, 'index'])->name('my-drawer.index');

@@ -37,8 +37,19 @@ class AppServiceProvider extends ServiceProvider
         // It's possible that the database hasn't been migrated yet, so we need to check that the setting exists before trying to retrieve it.
         if (!App::runningInConsole()) {
             $mailSetting = Setting::where('meta_key', 'mail_settings')->first();
+            $miscSetting = Setting::where('meta_key', 'misc_settings')->first();
         } else {
             $mailSetting = null;
+            $miscSetting = null;
+        }
+        
+        // Set timezone from settings if available
+        if ($miscSetting) {
+            $miscSettings = json_decode($miscSetting->meta_value);
+            if (isset($miscSettings->timezone) && !empty($miscSettings->timezone)) {
+                date_default_timezone_set($miscSettings->timezone);
+                Config::set('app.timezone', $miscSettings->timezone);
+            }
         }
         if ($mailSetting) {
             $mailSettings = json_decode($mailSetting->meta_value);

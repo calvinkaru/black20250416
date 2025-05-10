@@ -42,6 +42,10 @@ class SaleController extends Controller
             'invoice_number',
             'sale_type',
             'sales.created_at',
+            DB::raw('(SELECT SUM(amount) FROM transactions WHERE sales_id = sales.id AND payment_method = "cash" AND amount > 0) as cash_amount'),
+            DB::raw('(SELECT SUM(amount) FROM transactions WHERE sales_id = sales.id AND payment_method = "cheque" AND amount > 0) as cheque_amount'),
+            DB::raw('(SELECT SUM(amount) FROM transactions WHERE sales_id = sales.id AND payment_method = "credit" AND amount > 0) as credit_amount'),
+            DB::raw('(SELECT SUM(amount) FROM transactions WHERE sales_id = sales.id AND payment_method = "card" AND amount > 0) as card_amount')
         )
             ->leftJoin('contacts', 'sales.contact_id', '=', 'contacts.id')
             ->orderBy('sales.id', 'desc');

@@ -80,11 +80,35 @@ const columns = (handleRowClick) => [
         ),
     },
     {
-        field: "dine_in_charge",
-        headerName: "Dine In Charge",
-        width: 130, align: 'right', headerAlign: 'right',
+        field: "cash_amount",
+        headerName: "Cash",
+        width: 100, align: 'right', headerAlign: 'right',
         renderCell: (params) => {
-            return numeral(params.row.dine_in_charge || 0).format('0,0.00');
+            return numeral(params.value || 0).format('0,0.00');
+        },
+    },
+    {
+        field: "cheque_amount",
+        headerName: "Cheque",
+        width: 100, align: 'right', headerAlign: 'right',
+        renderCell: (params) => {
+            return numeral(params.value || 0).format('0,0.00');
+        },
+    },
+    {
+        field: "credit_amount",
+        headerName: "Credit",
+        width: 100, align: 'right', headerAlign: 'right',
+        renderCell: (params) => {
+            return numeral(params.value || 0).format('0,0.00');
+        },
+    },
+    {
+        field: "card_amount",
+        headerName: "Card",
+        width: 100, align: 'right', headerAlign: 'right',
+        renderCell: (params) => {
+            return numeral(params.value || 0).format('0,0.00');
         },
     },
     {

@@ -39,6 +39,10 @@ export default function Dashboard({ data, logo, version, store_name }) {
     const [cash_in, setCashIn] = useState(0);
     const [total_sales, setTotalSales] = useState(0);
     const [expenses, setExpenses] = useState(0);
+    const [cash, setCash] = useState(0);
+    const [cheque, setCheque] = useState(0);
+    const [credit, setCredit] = useState(0);
+    const [card, setCard] = useState(0);
 
     const refreshSummary = async () => {
         try {
@@ -46,10 +50,14 @@ export default function Dashboard({ data, logo, version, store_name }) {
                 start_date: startDate,
                 end_date: endDate,
             });
-            const { cash_in, total_sales, expenses } = response.data.summary;
+            const { cash_in, total_sales, expenses, cash, cheque, credit, card } = response.data.summary;
             setCashIn(cash_in);
             setTotalSales(total_sales);
             setExpenses(expenses);
+            setCash(cash);
+            setCheque(cheque);
+            setCredit(credit);
+            setCard(card);
         } catch (error) {
             console.error("Error fetching summary:", error);
         }
@@ -271,7 +279,7 @@ export default function Dashboard({ data, logo, version, store_name }) {
                                     <Link href="/reports/dailycash">
                                         <ListItem
                                             secondaryAction={numeral(
-                                                cash_in
+                                                cash
                                             ).format("0,0.00")}
                                         >
                                             <ListItemButton>
@@ -282,6 +290,45 @@ export default function Dashboard({ data, logo, version, store_name }) {
                                             </ListItemButton>
                                         </ListItem>
                                     </Link>
+                                    <Divider />
+                                    <ListItem
+                                        secondaryAction={numeral(
+                                            cheque
+                                        ).format("0,0.00")}
+                                    >
+                                        <ListItemButton>
+                                            <ListItemIcon>
+                                                <PaymentsIcon />
+                                            </ListItemIcon>
+                                            <ListItemText primary="Cheque" />
+                                        </ListItemButton>
+                                    </ListItem>
+                                    <Divider />
+                                    <ListItem
+                                        secondaryAction={numeral(
+                                            credit
+                                        ).format("0,0.00")}
+                                    >
+                                        <ListItemButton>
+                                            <ListItemIcon>
+                                                <PaymentsIcon />
+                                            </ListItemIcon>
+                                            <ListItemText primary="Credit" />
+                                        </ListItemButton>
+                                    </ListItem>
+                                    <Divider />
+                                    <ListItem
+                                        secondaryAction={numeral(
+                                            card
+                                        ).format("0,0.00")}
+                                    >
+                                        <ListItemButton>
+                                            <ListItemIcon>
+                                                <PaymentsIcon />
+                                            </ListItemIcon>
+                                            <ListItemText primary="Card" />
+                                        </ListItemButton>
+                                    </ListItem>
                                     <Divider />
                                     <Link href="/expenses">
                                         <ListItem

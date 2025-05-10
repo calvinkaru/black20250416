@@ -20,6 +20,7 @@ export default function DailyCashDialog({
     open,
     setOpen,
     stores,
+    users,
     refreshTransactions,
     auth
 }) {
@@ -28,6 +29,7 @@ export default function DailyCashDialog({
         transaction_date: dayjs().format("YYYY-MM-DD"), // Today's date in 'YYYY-MM-DD' format
         description: "",
         store_id: auth.store_id,
+        user_id: auth.id,
         transaction_type: "deposit", // Added transaction_type
     };
 
@@ -206,7 +208,7 @@ export default function DailyCashDialog({
                             />
                         </Grid>
 
-                        <Grid size={12}>
+                        <Grid size={6}>
                             <TextField
                                 value={formState.store_id}
                                 label="Store"
@@ -222,6 +224,27 @@ export default function DailyCashDialog({
                                         value={store.id}
                                     >
                                         {store.name}
+                                    </MenuItem>
+                                ))}
+                            </TextField>
+                        </Grid>
+                        
+                        <Grid size={6}>
+                            <TextField
+                                value={formState.user_id}
+                                label="User/Cashier"
+                                onChange={handleFieldChange}
+                                required
+                                name="user_id"
+                                select
+                                fullWidth
+                            >
+                                {users?.map((user) => (
+                                    <MenuItem
+                                        key={user.id}
+                                        value={user.id}
+                                    >
+                                        {user.name}
                                     </MenuItem>
                                 ))}
                             </TextField>

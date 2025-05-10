@@ -4,6 +4,21 @@ import { useEffect } from 'react';
 
 const MiscSetting = ({ handleSubmit, settingFormData, handleChange, setSettingFormData, settings }) => {
 
+    // List of common timezones
+    const timezones = [
+        { value: 'UTC', label: 'UTC' },
+        { value: 'Asia/Colombo', label: 'Asia/Colombo (UTC+5:30)' },
+        { value: 'Asia/Kolkata', label: 'Asia/Kolkata (UTC+5:30)' },
+        { value: 'Asia/Dubai', label: 'Asia/Dubai (UTC+4)' },
+        { value: 'Asia/Singapore', label: 'Asia/Singapore (UTC+8)' },
+        { value: 'Asia/Tokyo', label: 'Asia/Tokyo (UTC+9)' },
+        { value: 'Europe/London', label: 'Europe/London (UTC+0/+1)' },
+        { value: 'Europe/Paris', label: 'Europe/Paris (UTC+1/+2)' },
+        { value: 'America/New_York', label: 'America/New_York (UTC-5/-4)' },
+        { value: 'America/Los_Angeles', label: 'America/Los_Angeles (UTC-8/-7)' },
+        { value: 'Australia/Sydney', label: 'Australia/Sydney (UTC+10/+11)' },
+    ];
+
     useEffect(() => {
         try {
             const parsedSettings = JSON.parse(settings.misc_settings);
@@ -14,6 +29,7 @@ const MiscSetting = ({ handleSubmit, settingFormData, handleChange, setSettingFo
                 cheque_alert: parsedSettings.cheque_alert,
                 product_alert: parsedSettings.product_alert,
                 cart_first_focus: parsedSettings.cart_first_focus ? parsedSettings.cart_first_focus : 'quantity',
+                timezone: parsedSettings.timezone ? parsedSettings.timezone : 'UTC',
             });
         } catch (error) {
             console.error("Failed to parse misc settings:", error);
@@ -85,6 +101,25 @@ const MiscSetting = ({ handleSubmit, settingFormData, handleChange, setSettingFo
                                         <MenuItem value="quantity">Quantity</MenuItem>
                                         <MenuItem value="discount">Discount</MenuItem>
                                         <MenuItem value="price">Price</MenuItem>
+                                    </TextField>
+                                </Grid>
+                                <Grid size={6}>
+                                    <TextField
+                                        fullWidth
+                                        variant="outlined"
+                                        label={"Timezone"}
+                                        name="timezone"
+                                        required
+                                        sx={{ mt: "2rem" }}
+                                        value={settingFormData.timezone || 'UTC'}
+                                        onChange={handleChange}
+                                        select
+                                    >
+                                        {timezones.map((timezone) => (
+                                            <MenuItem key={timezone.value} value={timezone.value}>
+                                                {timezone.label}
+                                            </MenuItem>
+                                        ))}
                                     </TextField>
                                 </Grid>
                             </Grid>

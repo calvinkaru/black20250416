@@ -94,6 +94,13 @@ class DashboardController extends Controller
         $data['expenses'] = Expense::whereBetween('expense_date', [$startDate, $endDate])->sum('amount');
         $data['salary_expense'] = SalaryRecord::DateFilter($startDate, $endDate)->sum('net_salary');
         $data['expenses'] += $data['salary_expense'];
+        
+        // Add the payment method values
+        $data['cash'] = Transaction::where('payment_method', 'cash')->whereBetween('transaction_date', [$startDate, $endDate])->where('amount', '>', 0)->sum('amount');
+        $data['cheque'] = Transaction::where('payment_method', 'cheque')->whereBetween('transaction_date', [$startDate, $endDate])->where('amount', '>', 0)->sum('amount');
+        $data['credit'] = Transaction::where('payment_method', 'credit')->whereBetween('transaction_date', [$startDate, $endDate])->where('amount', '>', 0)->sum('amount');
+        $data['card'] = Transaction::where('payment_method', 'card')->whereBetween('transaction_date', [$startDate, $endDate])->where('amount', '>', 0)->sum('amount');
+        
         return response()->json([
             'summary' => $data,
         ], 200);

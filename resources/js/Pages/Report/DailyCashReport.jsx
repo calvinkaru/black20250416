@@ -329,7 +329,7 @@ export default function DailyReport({ logs, stores, users }) {
 
     return (
         <AuthenticatedLayout>
-            <Head title="Daily Report" />
+            <Head title="Daily Cash Report" />
             <Grid
                 container
                 spacing={2}
@@ -429,7 +429,7 @@ export default function DailyReport({ logs, stores, users }) {
             </Grid>
 
             <Grid container justifyContent={'center'}>
-                <Paper sx={{ width: { xs: '94vw', sm: '100%' }, overflow: 'hidden', maxWidth: '900px' }} >
+                <Paper sx={{ width: { xs: '100%', sm: '100%' }, overflow: 'hidden', maxWidth: '1200px' }} >
                     <Box sx={{ p: 2, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
                         <Button
                             variant="outlined"
@@ -557,6 +557,7 @@ export default function DailyReport({ logs, stores, users }) {
                 open={modalOpen}
                 setOpen={setModalOpen}
                 stores={stores}
+                users={users}
                 auth={auth}
                 refreshTransactions={refreshLogs}
             />
