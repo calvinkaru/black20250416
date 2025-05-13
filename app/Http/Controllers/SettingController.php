@@ -286,6 +286,7 @@ class SettingController extends Controller
                 'cheque_alert' => $request->input('cheque_alert'),
                 'product_alert' => $request->input('product_alert'),
                 'cart_first_focus' => $request->input('cart_first_focus'),
+                'timezone' => $request->input('timezone'),
             ];
             $settingsData['misc_settings'] = json_encode($miscSettings);
         } 

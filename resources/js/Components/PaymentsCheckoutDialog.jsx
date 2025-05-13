@@ -34,7 +34,9 @@ export default function PaymentsCheckoutDialog({
     formData,
     is_sale = false,
 }) {
-    const { cartState, cartTotal, emptyCart, totalProfit, taxes, totalWithTaxes } = useCart();
+    // useCart is passed as a prop, not a hook, so we need to use it differently
+    const cartContext = useCart();
+    const { cartState, cartTotal, emptyCart, totalProfit, taxes, totalWithTaxes, orderType } = cartContext;
     const return_sale = usePage().props.return_sale;
     const return_sale_id = usePage().props.sale_id;
 
@@ -69,6 +71,7 @@ export default function PaymentsCheckoutDialog({
     };
 
     useEffect(() => {
+        console.log("PaymentsCheckoutDialog mounted, orderType:", orderType);
         setAmount(totalWithTaxes - discount);
         setAmountReceived(payments.reduce((sum, payment) => sum + payment.amount, 0));
         setAmount(totalWithTaxes - discount)
@@ -78,6 +81,11 @@ export default function PaymentsCheckoutDialog({
     useEffect(() => {
         setAmount(totalWithTaxes - discount);
     }, [discount, totalWithTaxes])
+
+    // Log when orderType changes
+    useEffect(() => {
+        console.log("PaymentsCheckoutDialog orderType changed:", orderType);
+    }, [orderType])
 
     useEffect(() => {
         setAmountReceived(payments.reduce((sum, payment) => sum + payment.amount, 0));
@@ -101,6 +109,7 @@ export default function PaymentsCheckoutDialog({
 
         formJson.return_sale = return_sale;
         formJson.return_sale_id = return_sale_id;
+        formJson.order_type_id = orderType; // Add order type ID
 
         // Ensure net_total is always a valid number
         formJson.net_total = parseFloat((totalWithTaxes - discount).toFixed(2));
@@ -136,14 +145,16 @@ export default function PaymentsCheckoutDialog({
                 setOpen(false)
             })
             .catch((error) => {
-                const errorMessages = JSON.stringify(error.response, Object.getOwnPropertyNames(error));
+                console.log("Form data being sent:", formJson);
+                console.log("Order type ID:", orderType);
+                const errorMessages = error.response ? JSON.stringify(error.response.data) : error.message;
                 Swal.fire({
                     title: "Failed!",
                     text: errorMessages,
                     icon: "error",
                     showConfirmButton: true,
                 });
-                console.log(error);
+                console.error("Error details:", error);
             }).finally(() => {
                 setLoading(false); // Reset submitting state
             });

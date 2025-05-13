@@ -14,6 +14,8 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
+import dayjs from "dayjs";
+import numeral from "numeral";
 
 import InventoryIcon from '@mui/icons-material/Inventory';
 import PaymentsIcon from '@mui/icons-material/Payments';
@@ -50,9 +52,14 @@ export default function ViewDetailsDialog({
             const response = await axios.post(`/getorderdetails/${transactionType}`, { transaction_id: selectedTransaction });
             setPayments(response.data.payments);
             setItems(response.data.items);
-            setDetails(response.data.details)
+            
+            // Ensure we're using the correct date from the response
+            const detailsData = response.data.details;
+            console.log('Sale date from API:', detailsData.sale_date);
+            
+            setDetails(detailsData);
         } catch (error) {
-            console.error('Error fetching payments: ', error);
+            console.error('Error fetching details: ', error);
         }
     };
 
@@ -100,7 +107,9 @@ export default function ViewDetailsDialog({
                 onClose={handleClose}
                 aria-labelledby="alert-dialog-title"
             >
-                <DialogTitle id="alert-dialog-title">VIEW DETAILS</DialogTitle>
+                <DialogTitle id="alert-dialog-title">
+                    VIEW DETAILS {details.invoice_no && `(${details.invoice_no})`}
+                </DialogTitle>
                 <IconButton
                     aria-label="close"
                     onClick={handleClose}
@@ -118,29 +127,57 @@ export default function ViewDetailsDialog({
                         <TableBody>
                             <TableRow>
                                 <TableCell align="left">Date</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }} align="right">{type === 'sales' || type === 'sale' ? dayjs(details.sale_date).format('DD-MM-YYYY') : dayjs(details.purchase_date).format('DD-MM-YYYY')}</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }} align="right">{type === 'sales' || type === 'sale' ? dayjs(details.sale_date).format('DD-MMM-YYYY') : dayjs(details.purchase_date).format('DD-MMM-YYYY')}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell align="left">Contact Name</TableCell>
                                 <TableCell align="right" sx={{ fontWeight: 'bold' }}>{details.contact_name}</TableCell>
                             </TableRow>
+                            {type === 'sale' && details.order_type && (
+                                <TableRow>
+                                    <TableCell align="left">Order Type</TableCell>
+                                    <TableCell align="right" sx={{ fontWeight: 'bold' }}>{details.order_type}</TableCell>
+                                </TableRow>
+                            )}
                             <TableRow>
-                                <TableCell align="left">Total</TableCell>
-                                <TableCell align="right" sx={{ fontWeight: 'bold' }}>{numeral(details.total_amount).format('0,0.00')}</TableCell>
+                                <TableCell align="left">Subtotal</TableCell>
+                                <TableCell align="right" sx={{ fontWeight: 'bold' }}>Rs. {numeral(details.subtotal || details.total_amount).format('0,0.00')}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell align="left">Discount</TableCell>
                                 <TableCell align="right" sx={{ fontWeight: 'bold' }}>{numeral(details.discount).format('0,0.00')}</TableCell>
                             </TableRow>
-                            {type === 'sale' && details.dine_in_charge > 0 && (
-                                <TableRow>
-                                    <TableCell align="left">Service Charge</TableCell>
-                                    <TableCell align="right" sx={{ fontWeight: 'bold' }}>{numeral(details.dine_in_charge).format('0,0.00')}</TableCell>
-                                </TableRow>
+                            {type === 'sale' && details.taxes && Array.isArray(details.taxes) && details.taxes.length > 0 && (
+                                <>
+                                    {details.taxes.map((tax, index) => (
+                                        <TableRow key={index}>
+                                            <TableCell align="left">{tax.name} ({tax.rate}%)</TableCell>
+                                            <TableCell align="right" sx={{ fontWeight: 'bold' }}>Rs. {numeral(tax.amount).format('0,0.00')}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </>
                             )}
+                            
+                            <TableRow>
+                                <TableCell align="left">Total Amount</TableCell>
+                                <TableCell align="right" sx={{ fontWeight: 'bold' }}>Rs. {numeral(details.total_amount).format('0,0.00')}</TableCell>
+                            </TableRow>
+                            
+                            <TableRow>
+                                <TableCell align="left">Amount Paid</TableCell>
+                                <TableCell align="right" sx={{ fontWeight: 'bold' }}>Rs. {numeral(details.amount_paid || 0).format('0,0.00')}</TableCell>
+                            </TableRow>
+                            
+                            <TableRow>
+                                <TableCell align="left">Balance Due</TableCell>
+                                <TableCell align="right" sx={{ fontWeight: 'bold' }}>Rs. {numeral(details.balance_due || (details.total_amount - (details.amount_paid || 0))).format('0,0.00')}</TableCell>
+                            </TableRow>
                             <TableRow>
                                 <TableCell align="left">Created At</TableCell>
-                                <TableCell align="right" sx={{ fontWeight: 'bold' }}>{dayjs(details.created_at).format('DD-MM-YYYY hh:mm A')}</TableCell>
+                                <TableCell align="right" sx={{ fontWeight: 'bold' }}>
+                                    {dayjs(details.created_at).format('DD-MMM-YYYY, hh:mm A')}
+                                    {details.created_by && ` By: ${details.created_by}`}
+                                </TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>
@@ -157,8 +194,8 @@ export default function ViewDetailsDialog({
                                     <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Name</TableCell>
                                     <TableCell sx={{ fontWeight: 'bold' }}>Qty</TableCell>
                                     <TableCell sx={{ fontWeight: 'bold' }}>Price</TableCell>
-                                    <TableCell sx={{ fontWeight: 'bold' }}>Cost</TableCell>
-                                    <TableCell sx={{ fontWeight: 'bold' }}>Discount</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold' }}>Disc.</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold' }}>Total</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -166,10 +203,10 @@ export default function ViewDetailsDialog({
                                     items.map((item, index) => (
                                         <TableRow key={index}>
                                             <TableCell className="whitespace-nowrap" sx={{ whiteSpace: 'nowrap' }}>{item.name} {item.batch_number !== null && ` | ${item.batch_number}`}</TableCell>
-                                            <TableCell>{item.quantity}</TableCell>
-                                            <TableCell>{parseFloat(item.unit_price).toFixed(2)}</TableCell>
-                                            <TableCell>{parseFloat(item.unit_cost).toFixed(2)}</TableCell>
-                                            <TableCell>{parseFloat(item.discount).toFixed(2)}</TableCell>
+                                            <TableCell>{item.quantity}x</TableCell>
+                                            <TableCell>{numeral(item.unit_price).format('0,0.00')}</TableCell>
+                                            <TableCell>{numeral(item.discount).format('0,0.00')}</TableCell>
+                                            <TableCell>{numeral(item.quantity * item.unit_price - item.discount).format('0,0.00')}</TableCell>
                                         </TableRow>
                                     ))}
                             </TableBody>
@@ -192,8 +229,8 @@ export default function ViewDetailsDialog({
                                     payments.map((payment, index) => (
                                         <TableRow key={index}>
                                             <TableCell>{payment.amount < 0 ? `${payment.payment_method} Refund` : payment.payment_method}</TableCell>
-                                            <TableCell>{payment.payment_method === 'Credit' ? `- ${payment.amount}` : payment.amount}</TableCell>
-                                            <TableCell>{payment.transaction_date}</TableCell>
+                                            <TableCell>{payment.payment_method === 'Credit' ? `- ${numeral(payment.amount).format('0,0.00')}` : numeral(payment.amount).format('0,0.00')}</TableCell>
+                                            <TableCell>{dayjs(payment.transaction_date).format('DD-MMM-YYYY')}</TableCell>
                                             <TableCell align="left">
                                                 {!payment.parent_id && payment.payment_method !== 'Credit' && (
                                                     <IconButton onClick={() => handleDeletePayment(payment.id)} edge="start" color="error" aria-label="delete">

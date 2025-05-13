@@ -106,6 +106,35 @@ class DashboardController extends Controller
         ], 200);
     }
 
+    public function getOrderTypeSummary(Request $request)
+    {
+        // Get the filters from the request
+        $filters = $request->only(['start_date', 'end_date']);
+
+        // Order Type Totals Query
+        $orderTypeTotalsQuery = \App\Models\Sale::query();
+        $orderTypeTotalsQuery->select(
+            'order_types.id as order_type_id',
+            'order_types.name as order_type_name',
+            DB::raw('COUNT(sales.id) as total_sales'),
+            DB::raw('SUM(sales.total_amount) as total_amount')
+        )
+            ->join('order_types', 'sales.order_type_id', '=', 'order_types.id')
+            ->groupBy('order_types.id', 'order_types.name')
+            ->orderBy('order_types.name');
+
+        // Apply filters if provided
+        if (isset($filters['start_date']) && isset($filters['end_date'])) {
+            $orderTypeTotalsQuery->whereBetween('sales.sale_date', [$filters['start_date'], $filters['end_date']]);
+        }
+
+        $orderTypeTotals = $orderTypeTotalsQuery->get();
+
+        return response()->json([
+            'order_type_totals' => $orderTypeTotals,
+        ]);
+    }
+
     public function getSoldItemsSummary(Request $request)
     {
         // Get the filters from the request

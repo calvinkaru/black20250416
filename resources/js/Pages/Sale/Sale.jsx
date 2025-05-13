@@ -121,6 +121,7 @@ const columns = (handleRowClick) => [
         },
     },
     // { field: 'profit_amount', headerName: 'Profit Amount', width: 120 },
+    { field: "order_type_name", headerName: "Order Type", width: 120 },
     { field: "status", headerName: "Status", width: 100 },
     {
         field: "sale_date",
@@ -159,7 +160,7 @@ const columns = (handleRowClick) => [
     },
 ];
 
-export default function Sale({ sales, contacts }) {
+export default function Sale({ sales, contacts, orderTypes }) {
     const [selectedTransaction, setSelectedTransaction] = useState(null);
     const [paymentModalOpen, setPaymentModalOpen] = useState(false);
     const [viewDetailsModalOpen, setViewDetailsModalOpen] = useState(false);
@@ -173,6 +174,7 @@ export default function Sale({ sales, contacts }) {
         store: 0,
         contact_id: '',
         status: 'all',
+        order_type_id: 'all',
         query: '',
         per_page: 100,
     });
@@ -299,6 +301,24 @@ export default function Sale({ sales, contacts }) {
                         <MenuItem value={"all"}>All</MenuItem>
                         <MenuItem value={"completed"}>Completed</MenuItem>
                         <MenuItem value={"pending"}>Pending</MenuItem>
+                    </TextField>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 2 }}>
+                    <TextField
+                        value={searchTerms.order_type_id || "all"}
+                        label="Order Type"
+                        onChange={handleSearchChange}
+                        name="order_type_id"
+                        select
+                        fullWidth
+                    >
+                        <MenuItem value={"all"}>All</MenuItem>
+                        {orderTypes && orderTypes.map((orderType) => (
+                            <MenuItem key={orderType.id} value={orderType.id}>
+                                {orderType.name}
+                            </MenuItem>
+                        ))}
                     </TextField>
                 </Grid>
 

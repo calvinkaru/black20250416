@@ -13,6 +13,7 @@ const SalesProvider = ({ children, cartType = 'sales_cart'}) => {
   // Initialize orderType with the first available order type
   useEffect(() => {
     if (orderTypes && orderTypes.length > 0 && !orderType) {
+      console.log("Setting initial order type:", orderTypes[0]);
       setOrderType(orderTypes[0].id.toString());
       setSelectedOrderTypeObj(orderTypes[0]);
     }

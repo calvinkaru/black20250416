@@ -23,18 +23,24 @@ import dayjs from "dayjs";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import PaidIcon from "@mui/icons-material/Paid";
 import PaymentsIcon from "@mui/icons-material/Payments";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
+import ReceiptIcon from "@mui/icons-material/Receipt";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import axios from "axios";
 import numeral from "numeral";
 
 import Summaries from "./Partials/Summaries";
+import OrderTypeSummary from "./Partials/OrderTypeSummary";
 
 export default function Dashboard({ data, logo, version, store_name }) {
     const auth = usePage().props.auth.user;
     const permissions = usePage().props.userPermissions;
     const [startDate, setStartDate] = useState(dayjs().format("YYYY-MM-DD"));
     const [endDate, setEndDate] = useState(dayjs().format("YYYY-MM-DD"));
+    const currentDate = dayjs().format("MMMM D, YYYY");
 
     const [cash_in, setCashIn] = useState(0);
     const [total_sales, setTotalSales] = useState(0);
@@ -83,7 +89,7 @@ export default function Dashboard({ data, logo, version, store_name }) {
 
             {(auth.user_role == "super-admin" || permissions.includes("products") || permissions.includes("cheques")) && (
 
-                <Grid size={12} spacing={{ xs: 0.5, sm: 1 }} flexDirection={'row'} container sx={{ mb: 2 }}>
+                <Grid container spacing={{ xs: 0.5, sm: 1 }} flexDirection={'row'} sx={{ mb: 2 }}>
                     {parseFloat(data.lowStock) != 0 && (
                         <Grid size={{ xs: 12, sm: 3 }}>
                             <Link href={"/products?status=alert&per_page=" + data.lowStock}>
@@ -204,190 +210,162 @@ export default function Dashboard({ data, logo, version, store_name }) {
             )}
 
 
+            <Grid container spacing={2} sx={{ mt: "3rem", pb: 4 }}>
+    {/* Sales, Order Type, and Hello Admin Widgets */}
+    {(auth.user_role === "super-admin" || permissions.includes("sales") || permissions.includes("expenses")) && (
+        <Grid size={{ xs: 12, md: 4 }}>
+            <Card sx={{ width: "100%", height: "100%" }}>
+                <CardContent>
+                    <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField
+                                label="Start Date"
+                                name="start_date"
+                                type="date"
+                                fullWidth
+                                sx={{ '& .MuiInputLabel-root': { transform: 'translate(14px, -9px) scale(0.75)' } }}
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                required
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField
+                                label="End Date"
+                                name="end_date"
+                                type="date"
+                                fullWidth
+                                sx={{ '& .MuiInputLabel-root': { transform: 'translate(14px, -9px) scale(0.75)' } }}
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                required
+                            />
+                        </Grid>
+                    </Grid>
+
+                    <List>
+                        <Link href="/reports/dailycash" passHref>
+                            <ListItem secondaryAction={numeral(cash).format("0,0.00")}>
+                                <ListItemButton>
+                                    <ListItemIcon><AttachMoneyIcon /></ListItemIcon>
+                                    <ListItemText primary="Cash" />
+                                </ListItemButton>
+                            </ListItem>
+                        </Link>
+                        <Divider />
+                        <ListItem secondaryAction={numeral(card).format("0,0.00")}>
+                            <ListItemButton>
+                                <ListItemIcon><CreditCardIcon /></ListItemIcon>
+                                <ListItemText primary="Card" />
+                            </ListItemButton>
+                        </ListItem>
+                        <Divider />
+                        <ListItem secondaryAction={numeral(cheque).format("0,0.00")}>
+                            <ListItemButton>
+                                <ListItemIcon><ReceiptIcon /></ListItemIcon>
+                                <ListItemText primary="Cheque" />
+                            </ListItemButton>
+                        </ListItem>
+                        <Divider />
+                        <ListItem secondaryAction={numeral(credit).format("0,0.00")}>
+                            <ListItemButton>
+                                <ListItemIcon><AccountBalanceIcon /></ListItemIcon>
+                                <ListItemText primary="Credit" />
+                            </ListItemButton>
+                        </ListItem>
+                        <Divider />
+                        <Link href="/sales" passHref>
+                            <ListItem
+                                secondaryAction={
+                                    <Typography fontWeight="bold">
+                                        {numeral(total_sales).format("0,0.00")}
+                                    </Typography>
+                                }
+                            >
+                                <ListItemButton>
+                                    <ListItemIcon><PaidIcon /></ListItemIcon>
+                                    <ListItemText
+                                        primary={<Typography fontWeight="bold">Total Sales</Typography>}
+                                    />
+                                </ListItemButton>
+                            </ListItem>
+                        </Link>
+                        <Divider />
+                        <Link href="/expenses" passHref>
+                            <ListItem secondaryAction={numeral(expenses).format("0,0.00")}>
+                                <ListItemButton>
+                                    <ListItemIcon><AccountBalanceWalletIcon /></ListItemIcon>
+                                    <ListItemText primary="Expenses" />
+                                </ListItemButton>
+                            </ListItem>
+                        </Link>
+                        <Divider />
+                        <Link href="/reports/summary-report" passHref>
+                            <ListItem>
+                                <ListItemText
+                                    sx={{ textAlign: 'center', color: '#1976d2', textDecoration: 'underline' }}
+                                    primary="VIEW SUMMARY"
+                                />
+                            </ListItem>
+                        </Link>
+                    </List>
+                </CardContent>
+            </Card>
+        </Grid>
+    )}
+
+    {(auth.user_role === "super-admin" || permissions.includes("sales")) && (
+        <Grid size={{ xs: 12, md: 4 }}>
+            <Card sx={{ width: "100%", height: "100%" }}>
+                <CardContent>
+                    <OrderTypeSummary />
+                </CardContent>
+            </Card>
+        </Grid>
+    )}
+
+    <Grid size={{ xs: 12, md: 4 }}>
+        <Card
+            sx={{
+                width: "100%",
+                height: "100%",
+                p: 2,
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+            }}
+        >
             <Grid
                 container
-                size={{ xs: 12, sm: 8, md: 4 }}
-                sx={{ mt: "3rem", paddingBottom: 4 }}
+                direction="column"
                 spacing={2}
+                alignItems="center"
+                textAlign="center"
             >
-                {(auth.user_role == "super-admin" || permissions.includes("sales") || permissions.includes("expenses")) && (
-                    <Grid size={{ xs: 12, sm: 8, md: 4 }}>
-                        <Card sx={{ width: "100%" }}>
-                            <CardContent>
-                                <Grid
-                                    container
-                                    display="flex"
-                                    spacing={2}
-                                    width={"100%"}
-                                >
-                                    <Grid size={6}>
-                                        <TextField
-                                            label="Start Date"
-                                            name="start_date"
-                                            placeholder="Start Date"
-                                            type="date"
-                                            fullWidth
-                                            slotProps={{
-                                                inputLabel: {
-                                                    shrink: true,
-                                                },
-                                            }}
-                                            value={startDate}
-                                            onChange={(e) =>
-                                                setStartDate(e.target.value)
-                                            }
-                                            required
-                                        />
-                                    </Grid>
-                                    <Grid size={6}>
-                                        <TextField
-                                            label="End Date"
-                                            name="end_date"
-                                            placeholder="End Date"
-                                            type="date"
-                                            fullWidth
-                                            slotProps={{
-                                                inputLabel: {
-                                                    shrink: true,
-                                                },
-                                            }}
-                                            value={endDate}
-                                            onChange={(e) =>
-                                                setEndDate(e.target.value)
-                                            }
-                                            required
-                                        />
-                                    </Grid>
-                                </Grid>
-
-                                <List>
-                                    <Link href="/reports/sales">
-                                        <ListItem
-                                            secondaryAction={numeral(
-                                                total_sales
-                                            ).format("0,0.00")}
-                                        >
-                                            <ListItemButton>
-                                                <ListItemIcon>
-                                                    <PaidIcon />
-                                                </ListItemIcon>
-                                                <ListItemText primary="Sales" />
-                                            </ListItemButton>
-                                        </ListItem>
-                                    </Link>
-                                    <Divider />
-                                    <Link href="/reports/dailycash">
-                                        <ListItem
-                                            secondaryAction={numeral(
-                                                cash
-                                            ).format("0,0.00")}
-                                        >
-                                            <ListItemButton>
-                                                <ListItemIcon>
-                                                    <PaymentsIcon />
-                                                </ListItemIcon>
-                                                <ListItemText primary="Cash" />
-                                            </ListItemButton>
-                                        </ListItem>
-                                    </Link>
-                                    <Divider />
-                                    <ListItem
-                                        secondaryAction={numeral(
-                                            cheque
-                                        ).format("0,0.00")}
-                                    >
-                                        <ListItemButton>
-                                            <ListItemIcon>
-                                                <PaymentsIcon />
-                                            </ListItemIcon>
-                                            <ListItemText primary="Cheque" />
-                                        </ListItemButton>
-                                    </ListItem>
-                                    <Divider />
-                                    <ListItem
-                                        secondaryAction={numeral(
-                                            credit
-                                        ).format("0,0.00")}
-                                    >
-                                        <ListItemButton>
-                                            <ListItemIcon>
-                                                <PaymentsIcon />
-                                            </ListItemIcon>
-                                            <ListItemText primary="Credit" />
-                                        </ListItemButton>
-                                    </ListItem>
-                                    <Divider />
-                                    <ListItem
-                                        secondaryAction={numeral(
-                                            card
-                                        ).format("0,0.00")}
-                                    >
-                                        <ListItemButton>
-                                            <ListItemIcon>
-                                                <PaymentsIcon />
-                                            </ListItemIcon>
-                                            <ListItemText primary="Card" />
-                                        </ListItemButton>
-                                    </ListItem>
-                                    <Divider />
-                                    <Link href="/expenses">
-                                        <ListItem
-                                            secondaryAction={numeral(
-                                                expenses
-                                            ).format("0,0.00")}
-                                        >
-                                            <ListItemButton>
-                                                <ListItemIcon>
-                                                    <AccountBalanceWalletIcon />
-                                                </ListItemIcon>
-                                                <ListItemText primary="Expenses" />
-                                            </ListItemButton>
-                                        </ListItem>
-                                    </Link>
-                                    <Divider />
-                                    <Link href="/reports/summary-report">
-                                        <ListItem>
-                                            <ListItemText sx={{ textAlign: 'center', color: '#1976d2', textDecoration: 'underline' }} primary="VIEW SUMMARY" />
-                                        </ListItem>
-                                    </Link>
-                                </List>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                )}
-                <Grid size={{ xs: 12, sm: 4, md: 4 }}>
-                    <Card sx={{ width: "100%", height: "100%" }}>
-                        <CardContent>
-                            <Grid
-                                container
-                                display="flex"
-                                flexDirection={"column"}
-                                spacing={2}
-                                width={"100%"}
-                            >
-                                <Typography variant="h4" color="initial">
-                                    Hello,
-                                </Typography>
-                                <Typography variant="h2" color="initial">
-                                    {auth.name}
-                                </Typography>
-                                <Typography variant="h4" color="initial">
-                                    {store_name}
-                                </Typography>
-                            </Grid>
-                        </CardContent>
-                    </Card>
+                <Grid>
+                    <img src={logo} alt="" style={{ maxHeight: '250px', maxWidth: '350px', objectFit: 'contain' }} />
                 </Grid>
-                <Grid size={{ xs: 12, sm: 4, md: 4 }}>
-                    <Card sx={{ width: "100%", height: "100%", padding: 2, display: 'flex', justifyContent: 'center' }}>
-                        <img src={logo} style={{ maxHeight: '250px', objectFit: 'contain' }} alt="" />
-                    </Card>
+                <Grid>
+                    <Typography variant="h4">Hello, {auth.name}!</Typography>
                 </Grid>
-
-                {(auth.user_role == "super-admin" || permissions.includes("sales")) && (
-                    <Summaries></Summaries>
-                )}
+                <Grid sx={{ width: '100%' }}>
+                    <Divider />
+                </Grid>
+                <Grid>
+                    <Typography variant="h4">📅 Today is {currentDate}</Typography>
+                </Grid>
             </Grid>
+        </Card>
+    </Grid>
+
+    {/* Summary Section */}
+    {(auth.user_role === "super-admin" || permissions.includes("sales")) && (
+        <Grid size={{ xs: 12 }}>
+            <Summaries />
+        </Grid>
+    )}
+</Grid>
+
 
             <Box sx={{ justifyContent: 'center', alignItems: 'center', position: 'fixed', backgroundColor: '#c9c9c9', bottom: '2px', right: '6px', padding: '10px', paddingRight:2 }}>
                 <Grid container spacing={1} alignItems={'center'}>
@@ -398,18 +376,6 @@ export default function Dashboard({ data, logo, version, store_name }) {
                                 <RefreshIcon />
                             </IconButton>
                         </Link>
-                    </Grid>
-                    <Grid>
-                        <IconButton onClick={() => {
-                            const password = prompt("Enter password:");
-                            if (password === "infomax2025") {
-                                window.location.href = "/update";
-                            } else {
-                                alert("Wrong password!");
-                            }
-                        }}>
-                            <CloudUploadIcon />
-                        </IconButton>
                     </Grid>
                     <Grid>
                         VERSION {version}

@@ -42,12 +42,15 @@ class SaleController extends Controller
             'invoice_number',
             'sale_type',
             'sales.created_at',
+            'order_type_id',
+            'order_types.name as order_type_name',
             DB::raw('(SELECT SUM(amount) FROM transactions WHERE sales_id = sales.id AND payment_method = "cash" AND amount > 0) as cash_amount'),
             DB::raw('(SELECT SUM(amount) FROM transactions WHERE sales_id = sales.id AND payment_method = "cheque" AND amount > 0) as cheque_amount'),
             DB::raw('(SELECT SUM(amount) FROM transactions WHERE sales_id = sales.id AND payment_method = "credit" AND amount > 0) as credit_amount'),
             DB::raw('(SELECT SUM(amount) FROM transactions WHERE sales_id = sales.id AND payment_method = "card" AND amount > 0) as card_amount')
         )
             ->leftJoin('contacts', 'sales.contact_id', '=', 'contacts.id')
+            ->leftJoin('order_types', 'sales.order_type_id', '=', 'order_types.id')
             ->orderBy('sales.id', 'desc');
 
         if (isset($filters['contact_id'])) {
@@ -56,6 +59,10 @@ class SaleController extends Controller
 
         if (isset($filters['status']) && $filters['status'] !== 'all') {
             $query->where('status', $filters['status']);
+        }
+
+        if (isset($filters['order_type_id']) && $filters['order_type_id'] !== 'all') {
+            $query->where('order_type_id', $filters['order_type_id']);
         }
 
         // if (!isset($filters['start_date']) || !isset($filters['end_date'])) {
@@ -81,13 +88,15 @@ class SaleController extends Controller
 
     public function index(Request $request)
     {
-        $filters = $request->only(['contact_id', 'start_date', 'end_date', 'status', 'query', 'per_page']);
+        $filters = $request->only(['contact_id', 'start_date', 'end_date', 'status', 'order_type_id', 'query', 'per_page']);
         $sales = $this->getSales($filters);
         $contacts = Contact::select('id', 'name', 'balance')->customers()->get();
+        $orderTypes = \App\Models\OrderType::where('is_active', true)->get();
 
         return Inertia::render('Sale/Sale', [
             'sales' => $sales,
             'contacts' => $contacts,
+            'orderTypes' => $orderTypes,
             'pageLabel' => 'Sales',
         ]);
     }

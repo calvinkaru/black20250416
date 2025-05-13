@@ -21,6 +21,7 @@ export default function CartItemsTop({ customers }) {
 
   // Handle Dropdown Change
   const handleOrderTypeChange = (event) => {
+    console.log("Order type changed to:", event.target.value);
     setOrderType(event.target.value); // Update orderType in context
   };
 

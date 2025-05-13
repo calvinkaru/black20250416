@@ -10,6 +10,7 @@ import PrintIcon from "@mui/icons-material/Print";
 import dayjs from "dayjs";
 import axios from "axios";
 import numeral from "numeral";
+import Swal from "sweetalert2";
 
 import DailyCashDialog from "./Partial/DailyCashDialog";
 import ViewDetailsDialog from "@/Components/ViewDetailsDialog";
@@ -271,6 +272,138 @@ export default function DailyReport({ logs, stores, users }) {
         printWindow.close();
     };
     
+    const handleSalesSummaryPrint = () => {
+        // Get the selected date
+        const selectedDate = formState.transaction_date;
+        
+        // Fetch sales summary data for the selected date
+        axios.post('/dashboard/summary', {
+            start_date: selectedDate,
+            end_date: selectedDate
+        })
+        .then(response => {
+            const data = response.data.summary;
+            
+            // Create a styled print version
+            const printStyles = `
+                <style>
+                    @page { 
+                        size: 80mm auto; /* Standard thermal receipt width */
+                        margin: 0mm;
+                    }
+                    body { 
+                        font-family: 'Courier New', monospace;
+                        font-size: 12px;
+                        width: 80mm;
+                        margin: 0;
+                        padding: 5mm;
+                    }
+                    .receipt-container {
+                        width: 100%;
+                        text-align: center;
+                    }
+                    .shop-name {
+                        font-size: 16px;
+                        font-weight: bold;
+                        margin-bottom: 5px;
+                    }
+                    .receipt-header {
+                        text-align: center;
+                        margin-bottom: 10px;
+                    }
+                    .divider {
+                        border-top: 1px dashed #000;
+                        margin: 5px 0;
+                    }
+                    .summary-section {
+                        margin-top: 10px;
+                        text-align: left;
+                    }
+                    .summary-row {
+                        display: flex;
+                        justify-content: space-between;
+                        margin: 5px 0;
+                    }
+                    .bold {
+                        font-weight: bold;
+                    }
+                    .receipt-footer {
+                        text-align: center;
+                        margin-top: 10px;
+                        font-size: 12px;
+                    }
+                </style>
+            `;
+            
+            // Create receipt content
+            let receiptContent = `
+                <div class="receipt-container">
+                    <div class="receipt-header">
+                        <div class="shop-name">SALES SUMMARY</div>
+                        <div>Sales Summary For: ${selectedDate}</div>
+                        <div>Generated On: ${new Date().toLocaleString()}</div>
+                    </div>
+                    <div class="divider"></div>
+                    
+                    <div class="summary-section">
+                        <div class="summary-row">
+                            <span class="bold">Cash:</span>
+                            <span>${numeral(data.cash).format('0,0.00')}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="bold">Card:</span>
+                            <span>${numeral(data.card).format('0,0.00')}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="bold">Cheque:</span>
+                            <span>${numeral(data.cheque).format('0,0.00')}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="bold">Credit:</span>
+                            <span>${numeral(data.credit).format('0,0.00')}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="bold">Total Sales:</span>
+                            <span>${numeral(data.total_sales).format('0,0.00')}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="divider"></div>
+                    <div class="receipt-footer">
+                        *** End of Report ***
+                    </div>
+                </div>
+            `;
+            
+            // Open print window
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Sales Summary</title>
+                        ${printStyles}
+                    </head>
+                    <body>
+                        ${receiptContent}
+                    </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+        })
+        .catch(error => {
+            console.error('Error fetching sales summary:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to fetch sales summary data'
+            });
+        });
+    };
+    
     const handlePrint = () => {
         const printContent = document.querySelector('table');
         const originalContents = document.body.innerHTML;
@@ -446,6 +579,14 @@ export default function DailyReport({ logs, stores, users }) {
                             startIcon={<PrintIcon />}
                         >
                             Bill Printer
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            color="success"
+                            onClick={handleSalesSummaryPrint}
+                            startIcon={<PrintIcon />}
+                        >
+                            Sales Summary
                         </Button>
                     </Box>
                     <TableContainer>

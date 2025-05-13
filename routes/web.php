@@ -60,6 +60,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/dashboard/summary', [DashboardController::class, 'getDashboardSummary'])->name('dashboard.summary');
     Route::post('/dashboard/sold-items-summary', [DashboardController::class, 'getSoldItemsSummary']);
+    Route::post('/dashboard/order-type-summary', [DashboardController::class, 'getOrderTypeSummary']);
 
     Route::get('/stores', [StoreController::class, 'index'])->name('store');
     Route::post('/store', [StoreController::class, 'store']);
